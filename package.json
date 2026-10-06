@@ -24,7 +24,8 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.24.4",
-    "sequelize": "^6.37.8"
+    "sequelize": "^6.37.8",
+    "typescript": "^7.0.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -34,7 +35,6 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.6.3",
     "@types/sequelize": "^4.28.20",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "tsx": "^4.23.15"
   }
 }
