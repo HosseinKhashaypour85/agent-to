@@ -1,0 +1,3 @@
+import Shell from "@/components/Shell";
+import PageHeader from "@/components/PageHeader";
+export default function Subscriptions(){return <Shell><PageHeader title="اشتراک‌ها" description="مدیریت اشتراک کسب‌وکارها، تمدید و وضعیت سرویس"/><div className="card p-8"><div className="grid md:grid-cols-4 gap-4">{[["فعال","104"],["آزمایشی","18"],["معلق","4"],["منقضی","2"]].map(x=><div className="rounded-2xl bg-slate-50 p-5" key={x[0]}><div className="text-sm text-slate-500">{x[0]}</div><b className="text-2xl block mt-2">{x[1]}</b></div>)}</div><div className="mt-8 p-6 rounded-2xl border border-dashed text-center text-slate-400 text-sm">لیست اشتراک‌ها در اتصال بعدی به API مدیریت اشتراک نمایش داده می‌شود.</div></div></Shell>}

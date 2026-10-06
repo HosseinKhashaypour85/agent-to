@@ -1,0 +1,3 @@
+import Shell from "@/components/Shell";
+import PageHeader from "@/components/PageHeader";
+export default function Usage(){return <Shell><PageHeader title="مصرف و Usage" description="مصرف AI، پیام‌ها، Agentها و منابع هر کسب‌وکار"/><div className="card p-6"><div className="space-y-6">{[["پیام‌های AI","284,920","68%"],["درخواست‌های AI","192,410","54%"],["فضای Knowledge","38.2 GB","41%"]].map(x=><div key={x[0]}><div className="flex justify-between text-sm"><span>{x[0]}</span><b>{x[1]}</b></div><div className="h-2 rounded-full bg-slate-100 mt-2 overflow-hidden"><div className="h-full bg-brand-600 rounded-full" style={{width:x[2]}}/></div></div>)}</div></div></Shell>}

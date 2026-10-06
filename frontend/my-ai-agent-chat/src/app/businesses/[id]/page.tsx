@@ -1,0 +1,2 @@
+import Shell from "@/components/Shell";import BusinessDetails from "@/components/BusinessDetails";
+export default async function Page({params}:{params:Promise<{id:string}>}){const {id}=await params;return <Shell><BusinessDetails id={id}/></Shell>}
