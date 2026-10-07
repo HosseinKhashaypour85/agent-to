@@ -66,14 +66,17 @@ class Customer
       foreignKey: "customerId",
       as: "leadScores",
     });
+
     Customer.hasMany(models.Lead, {
       foreignKey: "customerId",
       as: "leads",
     });
+
     Customer.hasMany(models.Conversation, {
       foreignKey: "customerId",
       as: "conversations",
     });
+
     Customer.hasMany(models.CustomerMemory, {
       foreignKey: "customerId",
       as: "memories",
@@ -148,10 +151,6 @@ Customer.init(
     tableName: "customers",
     modelName: "Customer",
     timestamps: true,
-
-    tableOptions: {
-      collate: "utf8mb4_0900_ai_ci",
-    },
 
     indexes: [
       {
