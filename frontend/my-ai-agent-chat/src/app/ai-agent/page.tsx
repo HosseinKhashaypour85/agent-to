@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+
 import {
   Clock3,
   Loader2,
@@ -11,25 +12,36 @@ import {
   Sparkles,
 } from "lucide-react";
 
+/* ======================================================
+   API
+====================================================== */
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:3000/api/v1";
+  "https://agent-to.darkube.ir/api/v1";
+
+/* ======================================================
+   Site ID
+====================================================== */
 
 function getSiteId(): string {
   if (typeof window === "undefined") {
-    return "testshop";
+    return "";
   }
 
-  const params = new URLSearchParams(
-    window.location.search
-  );
+  const params = new URLSearchParams(window.location.search);
 
-  return (
+  const siteId =
     params.get("siteId")?.trim() ||
     params.get("site")?.trim() ||
-    "testshop"
-  );
+    "";
+
+  return siteId;
 }
+
+/* ======================================================
+   Types
+====================================================== */
 
 type ChatSettings = {
   primaryColor: string;
@@ -41,18 +53,26 @@ type ChatSettings = {
   textColor: string;
   borderColor: string;
   buttonTextColor: string;
+
   logoUrl: string | null;
+
   welcomeTitle: string;
   welcomeMessage: string;
+
   onlineLabel: string;
   responseTimeText: string;
+
   phone: string | null;
   address: string | null;
+
   inputPlaceholder: string;
+
   footerText: string | null;
+
   showPhone: boolean;
   showAddress: boolean;
   showFooter: boolean;
+
   quickActions: string[];
 };
 
@@ -76,55 +96,114 @@ type Message = {
   content: string;
 };
 
+/* ======================================================
+   Page
+====================================================== */
+
 export default function AIAgentPage() {
-  const [siteId, setSiteId] = useState("testshop");
+  /*
+   * مهم:
+   * هیچ Site ID پیش‌فرضی نداریم.
+   *
+   * مثال:
+   * /ai-agent?siteId=testnewshop
+   */
+
+  const [siteId, setSiteId] = useState("");
 
   const [config, setConfig] =
     useState<ConfigResponse | null>(null);
 
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
+
   const [message, setMessage] = useState("");
+
   const [messages, setMessages] = useState<Message[]>([]);
+
   const [sending, setSending] = useState(false);
 
-  /*
-   * دریافت Site ID
-   *
-   * فعلاً:
-   * /ai-agent?site=testshop
-   *
-   * بعداً Site ID از سیستم نصب و دامنه مدیریت می‌شود.
-   */
+  /* ====================================================
+     دریافت Site ID از URL
+  ==================================================== */
+
   useEffect(() => {
     const currentSiteId = getSiteId();
+
+    console.log(
+      "[AI AGENT] Site ID from URL:",
+      currentSiteId
+    );
+
+    if (!currentSiteId) {
+      setError(
+        "Site ID در آدرس صفحه وجود ندارد."
+      );
+
+      setLoading(false);
+
+      return;
+    }
 
     setSiteId(currentSiteId);
   }, []);
 
-  /*
-   * دریافت تنظیمات عمومی سایت
-   */
+  /* ====================================================
+     دریافت Config
+  ==================================================== */
+
   useEffect(() => {
-    if (!siteId) return;
+    if (!siteId) {
+      return;
+    }
 
     async function loadConfig() {
       try {
         setLoading(true);
         setError("");
+        setConfig(null);
+
+        const configUrl =
+          `${API_URL}/public/sites/` +
+          `${encodeURIComponent(siteId)}/config`;
+
+        console.log(
+          "[AI AGENT] Loading config:",
+          configUrl
+        );
 
         const response = await fetch(
-          `${API_URL}/public/sites/${encodeURIComponent(
-            siteId
-          )}/config`,
+          configUrl,
           {
+            method: "GET",
             cache: "no-store",
           }
         );
 
+        console.log(
+          "[AI AGENT] Config status:",
+          response.status
+        );
+
         if (!response.ok) {
+          let errorMessage =
+            "CONFIG_REQUEST_FAILED";
+
+          try {
+            const errorData =
+              await response.json();
+
+            if (errorData?.message) {
+              errorMessage =
+                errorData.message;
+            }
+          } catch {
+            // Response JSON نبود
+          }
+
           throw new Error(
-            "CONFIG_REQUEST_FAILED"
+            `${errorMessage} (${response.status})`
           );
         }
 
@@ -140,7 +219,7 @@ export default function AIAgentPage() {
         setConfig(data);
       } catch (err) {
         console.error(
-          "CONFIG ERROR:",
+          "[AI AGENT] CONFIG ERROR:",
           err
         );
 
@@ -155,9 +234,10 @@ export default function AIAgentPage() {
     loadConfig();
   }, [siteId]);
 
-  /*
-   * Visitor ID مخصوص هر سایت
-   */
+  /* ====================================================
+     Visitor ID
+  ==================================================== */
+
   const visitorId = useMemo(() => {
     if (
       typeof window === "undefined" ||
@@ -190,9 +270,10 @@ export default function AIAgentPage() {
     return id;
   }, [siteId]);
 
-  /*
-   * ارسال پیام
-   */
+  /* ====================================================
+     Send Message
+  ==================================================== */
+
   async function sendMessage(
     customMessage?: string
   ) {
@@ -204,7 +285,8 @@ export default function AIAgentPage() {
       !text ||
       sending ||
       !config ||
-      !visitorId
+      !visitorId ||
+      !siteId
     ) {
       return;
     }
@@ -227,10 +309,12 @@ export default function AIAgentPage() {
         `${API_URL}/chat`,
         {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json",
           },
+
           body: JSON.stringify({
             siteId,
             visitorId,
@@ -263,7 +347,7 @@ export default function AIAgentPage() {
       ]);
     } catch (err) {
       console.error(
-        "CHAT ERROR:",
+        "[AI AGENT] CHAT ERROR:",
         err
       );
 
@@ -281,9 +365,10 @@ export default function AIAgentPage() {
     }
   }
 
-  /*
-   * Loading
-   */
+  /* ====================================================
+     Loading
+  ==================================================== */
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#f8f9fc]">
@@ -301,13 +386,15 @@ export default function AIAgentPage() {
     );
   }
 
-  /*
-   * Error
-   */
+  /* ====================================================
+     Error
+  ==================================================== */
+
   if (error || !config) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#f8f9fc] p-6">
         <div className="w-full max-w-md rounded-3xl bg-white border border-black/5 p-10 text-center shadow-xl">
+
           <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-5">
             <MessageCircle size={26} />
           </div>
@@ -319,6 +406,11 @@ export default function AIAgentPage() {
           <p className="text-sm leading-7 text-black/50">
             {error}
           </p>
+
+          <p className="mt-4 text-xs text-black/30 break-all">
+            Site ID: {siteId || "وارد نشده"}
+          </p>
+
         </div>
       </main>
     );
@@ -332,6 +424,10 @@ export default function AIAgentPage() {
   const softText =
     `${settings.textColor}70`;
 
+  /* ====================================================
+     UI
+  ==================================================== */
+
   return (
     <main
       dir="rtl"
@@ -342,6 +438,7 @@ export default function AIAgentPage() {
         color: settings.textColor,
       }}
     >
+
       {/* Background */}
 
       <div
@@ -367,12 +464,15 @@ export default function AIAgentPage() {
         style={{
           backgroundColor:
             settings.surfaceColor,
+
           border:
             `1px solid ${settings.borderColor}`,
+
           boxShadow:
             `0 24px 90px -35px ${settings.primaryColor}55`,
         }}
       >
+
         {/* Header */}
 
         <header
@@ -380,21 +480,27 @@ export default function AIAgentPage() {
           style={{
             borderBottom:
               `1px solid ${settings.borderColor}`,
+
             backgroundColor:
               settings.surfaceColor,
           }}
         >
+
           <div className="flex items-center gap-3 min-w-0">
+
             <div className="relative shrink-0">
+
               <div
                 className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center"
                 style={{
                   background:
                     `linear-gradient(135deg, ${settings.primaryColor}, ${settings.secondaryColor})`,
+
                   boxShadow:
                     `0 8px 25px -10px ${settings.primaryColor}`,
                 }}
               >
+
                 {settings.logoUrl ? (
                   <img
                     src={settings.logoUrl}
@@ -413,6 +519,7 @@ export default function AIAgentPage() {
                       "A"}
                   </span>
                 )}
+
               </div>
 
               <span
@@ -420,13 +527,16 @@ export default function AIAgentPage() {
                 style={{
                   backgroundColor:
                     settings.primaryColor,
+
                   borderColor:
                     settings.surfaceColor,
                 }}
               />
+
             </div>
 
             <div className="min-w-0">
+
               <h1
                 className="font-bold text-[15px] truncate flex items-center gap-1.5"
                 style={{
@@ -446,6 +556,7 @@ export default function AIAgentPage() {
               </h1>
 
               <div className="flex items-center gap-1.5 mt-1">
+
                 <span
                   className="w-1.5 h-1.5 rounded-full"
                   style={{
@@ -462,16 +573,21 @@ export default function AIAgentPage() {
                 >
                   {settings.onlineLabel}
                 </span>
+
               </div>
+
             </div>
+
           </div>
 
           <div
             className="hidden sm:flex items-center gap-2 rounded-full px-3 py-2 text-[11px] shrink-0"
             style={{
               color: mutedText,
+
               backgroundColor:
                 settings.backgroundColor,
+
               border:
                 `1px solid ${settings.borderColor}`,
             }}
@@ -482,19 +598,24 @@ export default function AIAgentPage() {
               {settings.responseTimeText}
             </span>
           </div>
+
         </header>
 
         {/* Messages */}
 
         <section className="flex-1 overflow-y-auto chat-scroll px-4 sm:px-6 md:px-10 py-6 md:py-8">
+
           <div className="max-w-3xl mx-auto min-h-full flex flex-col">
+
             {messages.length === 0 && (
               <div className="flex-1 flex flex-col items-center justify-center text-center py-8 animate-fade-in">
+
                 <div
                   className="w-16 h-16 rounded-3xl flex items-center justify-center mb-5"
                   style={{
                     backgroundColor:
                       `${settings.primaryColor}15`,
+
                     border:
                       `1px solid ${settings.primaryColor}30`,
                   }}
@@ -530,6 +651,7 @@ export default function AIAgentPage() {
                 {settings.quickActions
                   .length > 0 && (
                   <div className="flex flex-wrap justify-center gap-2.5 mt-7 max-w-2xl">
+
                     {settings.quickActions.map(
                       (
                         action,
@@ -547,11 +669,14 @@ export default function AIAgentPage() {
                           style={{
                             color:
                               settings.textColor,
+
                             backgroundColor:
                               settings.surfaceColor,
+
                             border:
                               `1px solid ${settings.borderColor}`,
                           }}
+
                           onMouseEnter={(
                             e
                           ) => {
@@ -561,6 +686,7 @@ export default function AIAgentPage() {
                             e.currentTarget.style.boxShadow =
                               `0 8px 24px -14px ${settings.primaryColor}`;
                           }}
+
                           onMouseLeave={(
                             e
                           ) => {
@@ -575,13 +701,16 @@ export default function AIAgentPage() {
                         </button>
                       )
                     )}
+
                   </div>
                 )}
+
               </div>
             )}
 
             {messages.length > 0 && (
               <div className="space-y-4 py-2">
+
                 {messages.map(
                   (item) => {
                     const isUser =
@@ -597,12 +726,14 @@ export default function AIAgentPage() {
                             : "justify-end"
                         }`}
                       >
+
                         {!isUser && (
                           <div
                             className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-xs font-bold"
                             style={{
                               background:
                                 `linear-gradient(135deg, ${settings.primaryColor}, ${settings.secondaryColor})`,
+
                               color:
                                 settings.buttonTextColor,
                             }}
@@ -620,18 +751,24 @@ export default function AIAgentPage() {
                               ? {
                                   backgroundColor:
                                     settings.userMessageColor,
+
                                   color:
                                     settings.textColor,
+
                                   border:
                                     `1px solid ${settings.borderColor}`,
+
                                   borderBottomLeftRadius: 7,
                                 }
                               : {
                                   backgroundColor:
                                     settings.aiMessageColor,
+
                                   color:
                                     settings.buttonTextColor,
+
                                   borderBottomRightRadius: 7,
+
                                   boxShadow:
                                     `0 10px 28px -18px ${settings.primaryColor}`,
                                 }
@@ -639,6 +776,7 @@ export default function AIAgentPage() {
                         >
                           {item.content}
                         </div>
+
                       </div>
                     );
                   }
@@ -646,16 +784,20 @@ export default function AIAgentPage() {
 
                 {sending && (
                   <div className="flex items-end gap-2.5 justify-end animate-slide-up">
+
                     <div
                       className="rounded-2xl rounded-br-md px-5 py-3.5"
                       style={{
                         backgroundColor:
                           settings.aiMessageColor,
+
                         color:
                           settings.buttonTextColor,
                       }}
                     >
+
                       <div className="flex items-center gap-1.5">
+
                         <span className="typing-dot" />
 
                         <span
@@ -673,13 +815,19 @@ export default function AIAgentPage() {
                               "0.3s",
                           }}
                         />
+
                       </div>
+
                     </div>
+
                   </div>
                 )}
+
               </div>
             )}
+
           </div>
+
         </section>
 
         {/* Input */}
@@ -689,19 +837,24 @@ export default function AIAgentPage() {
           style={{
             borderTop:
               `1px solid ${settings.borderColor}`,
+
             backgroundColor:
               settings.surfaceColor,
           }}
         >
+
           <div className="max-w-3xl mx-auto">
+
             <div
               className="flex items-end gap-2 rounded-2xl p-1.5 transition-all duration-200"
               style={{
                 backgroundColor:
                   settings.backgroundColor,
+
                 border:
                   `1px solid ${settings.borderColor}`,
               }}
+
               onFocusCapture={(e) => {
                 e.currentTarget.style.borderColor =
                   settings.primaryColor;
@@ -709,6 +862,7 @@ export default function AIAgentPage() {
                 e.currentTarget.style.boxShadow =
                   `0 0 0 4px ${settings.primaryColor}18`;
               }}
+
               onBlurCapture={(e) => {
                 e.currentTarget.style.borderColor =
                   settings.borderColor;
@@ -717,6 +871,7 @@ export default function AIAgentPage() {
                   "none";
               }}
             >
+
               <textarea
                 value={message}
                 onChange={(e) =>
@@ -724,21 +879,27 @@ export default function AIAgentPage() {
                     e.target.value
                   )
                 }
+
                 onKeyDown={(e) => {
                   if (
                     e.key === "Enter" &&
                     !e.shiftKey
                   ) {
                     e.preventDefault();
+
                     sendMessage();
                   }
                 }}
+
                 placeholder={
                   settings.inputPlaceholder
                 }
+
                 rows={1}
                 disabled={sending}
+
                 className="flex-1 min-h-10 max-h-32 resize-none bg-transparent outline-none border-none px-3 py-2.5 text-sm disabled:opacity-50"
+
                 style={{
                   color:
                     settings.textColor,
@@ -749,17 +910,23 @@ export default function AIAgentPage() {
                 onClick={() =>
                   sendMessage()
                 }
+
                 disabled={
                   !message.trim() ||
                   sending
                 }
+
                 aria-label="ارسال پیام"
+
                 className="w-10 h-10 rounded-xl flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95"
+
                 style={{
                   background:
                     `linear-gradient(135deg, ${settings.primaryColor}, ${settings.secondaryColor})`,
+
                   color:
                     settings.buttonTextColor,
+
                   boxShadow:
                     message.trim()
                       ? `0 8px 20px -8px ${settings.primaryColor}`
@@ -775,6 +942,7 @@ export default function AIAgentPage() {
                   <Send size={16} />
                 )}
               </button>
+
             </div>
 
             {settings.showFooter &&
@@ -788,7 +956,9 @@ export default function AIAgentPage() {
                   {settings.footerText}
                 </p>
               )}
+
           </div>
+
         </div>
 
         {/* Contact */}
@@ -800,16 +970,19 @@ export default function AIAgentPage() {
             style={{
               borderTop:
                 `1px solid ${settings.borderColor}`,
+
               backgroundColor:
                 settings.surfaceColor,
             }}
           >
+
             <div
               className="flex flex-wrap justify-center gap-2 text-[11px]"
               style={{
                 color: mutedText,
               }}
             >
+
               {settings.showPhone &&
                 settings.phone && (
                   <div
@@ -817,6 +990,7 @@ export default function AIAgentPage() {
                     style={{
                       backgroundColor:
                         settings.backgroundColor,
+
                       border:
                         `1px solid ${settings.borderColor}`,
                     }}
@@ -836,6 +1010,7 @@ export default function AIAgentPage() {
                     style={{
                       backgroundColor:
                         settings.backgroundColor,
+
                       border:
                         `1px solid ${settings.borderColor}`,
                     }}
@@ -847,9 +1022,12 @@ export default function AIAgentPage() {
                     </span>
                   </div>
                 )}
+
             </div>
+
           </div>
         )}
+
       </div>
 
       <style jsx global>{`
