@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import Site from "../../models/Site";
 
 export async function createSite(data: {
@@ -34,4 +35,22 @@ export async function getSites(tenantId: string) {
     },
     order: [["createdAt", "DESC"]],
   });
+}
+
+export async function getSite(idOrSiteId: string, tenantId: string) {
+  const site = await Site.findOne({
+    where: {
+      tenantId,
+      [Op.or]: [
+        { id: idOrSiteId },
+        { siteId: idOrSiteId },
+      ],
+    },
+  });
+
+  if (!site) {
+    throw new Error("SITE_NOT_FOUND");
+  }
+
+  return site;
 }

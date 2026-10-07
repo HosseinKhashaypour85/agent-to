@@ -26,6 +26,7 @@ import adminSubscriptionRoutes from "./modules/admin/subscription.routes";
 import adminBusinessRoutes from "./modules/admin/business.routes";
 import adminBusinessOverviewRoutes from "./modules/admin/business-overview.routes";
 import adminBusinessOwnerRoutes from "./modules/admin/business-owner.routes";
+import dashboardStatsRoutes from "./modules/admin/dashboard-stats.routes";
 import crmRoutes from "./modules/crm/crm.routes";
 
 const app = express();
@@ -149,6 +150,10 @@ app.use(
 app.use(
   "/api/v1/admin/businesses",
   adminBusinessOwnerRoutes
+);
+app.use(
+  "/api/v1/admin/dashboard",
+  dashboardStatsRoutes
 );
 app.use("/api/v1/crm", crmRoutes);
 app.use("/api/v1", siteChatSettingsRoutes);

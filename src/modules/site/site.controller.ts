@@ -4,6 +4,7 @@ import { AuthRequest } from "../../middlewares/auth.middleware";
 import {
   createSite,
   getSites,
+  getSite,
 } from "./site.service";
 
 import {
@@ -90,6 +91,44 @@ export async function list(
     });
 
   } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function getSiteById(
+  req: AuthRequest,
+  res: Response
+) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const idOrSiteId = String(req.params.id);
+
+    const site = await getSite(idOrSiteId, req.user.tenantId);
+
+    return res.status(200).json({
+      success: true,
+      data: site,
+    });
+
+  } catch (error: any) {
+    if (error.message === "SITE_NOT_FOUND") {
+      return res.status(404).json({
+        success: false,
+        message: "Site not found",
+      });
+    }
+
     console.error(error);
 
     return res.status(500).json({
