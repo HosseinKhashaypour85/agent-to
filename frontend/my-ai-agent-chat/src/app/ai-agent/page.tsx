@@ -24,7 +24,11 @@ function getSiteId(): string {
     window.location.search
   );
 
-  return params.get("site")?.trim() || "testshop";
+  return (
+    params.get("siteId")?.trim() ||
+    params.get("site")?.trim() ||
+    "testshop"
+  );
 }
 
 type ChatSettings = {
