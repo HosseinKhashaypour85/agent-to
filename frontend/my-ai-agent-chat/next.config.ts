@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
 
   env: {
     NEXT_PUBLIC_API_URL: "https://agent-to.darkube.ir/api/v1",
+    API_URL : "https://agent-to.darkube.ir/api/v1"
   },
 };
 
