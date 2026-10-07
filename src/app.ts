@@ -28,6 +28,8 @@ import adminBusinessOverviewRoutes from "./modules/admin/business-overview.route
 import adminBusinessOwnerRoutes from "./modules/admin/business-owner.routes";
 import dashboardStatsRoutes from "./modules/admin/dashboard-stats.routes";
 import crmRoutes from "./modules/crm/crm.routes";
+import adminAuthRoutes from "./modules/admin/auth/admin-auth.routes";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -42,6 +44,8 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
 
 app.use(
   (err: any, _req: any, res: any, _next: any) => {
@@ -157,4 +161,5 @@ app.use(
 );
 app.use("/api/v1/crm", crmRoutes);
 app.use("/api/v1", siteChatSettingsRoutes);
+app.use("/api/v1/admin/auth", adminAuthRoutes);
 export default app;

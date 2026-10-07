@@ -16,21 +16,26 @@ export function authMiddleware(
   next: NextFunction
 ) {
   try {
-    const authHeader = req.headers.authorization;
+    // اول JWT را از HttpOnly Cookie می‌خوانیم
+    let token = req.cookies?.agentto_admin_token;
 
-    if (!authHeader) {
-      return res.status(401).json({
-        success: false,
-        message: "Authorization header is required",
-      });
+    // برای APIهای قدیمی، Bearer Token هم همچنان پشتیبانی می‌شود
+    if (!token) {
+      const authHeader = req.headers.authorization;
+
+      if (authHeader) {
+        const [type, bearerToken] = authHeader.split(" ");
+
+        if (type === "Bearer" && bearerToken) {
+          token = bearerToken;
+        }
+      }
     }
 
-    const [type, token] = authHeader.split(" ");
-
-    if (type !== "Bearer" || !token) {
+    if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Invalid authorization format",
+        message: "Authentication required",
       });
     }
 
