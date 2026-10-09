@@ -8,6 +8,8 @@ import { AlertCircle, LoaderCircle, RefreshCw, Database } from "lucide-react";
 type Props = { title: string; description: string; endpoint: string; collection: string; empty: string };
 function pickRows(value: any, collection: string): any[] {
   if (Array.isArray(value?.[collection])) return value[collection];
+  if (collection === "agent" && value?.agent && typeof value.agent === "object") return [value.agent];
+  if (collection === "user" && value?.data && typeof value.data === "object" && !Array.isArray(value.data)) return [value.data];
   if (Array.isArray(value?.data)) return value.data;
   if (Array.isArray(value?.data?.[collection])) return value.data[collection];
   if (Array.isArray(value?.customers)) return value.customers;
