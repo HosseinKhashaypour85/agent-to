@@ -22,6 +22,7 @@ import Subscription from "./models/Subscription";
 import LeadScore from "./models/LeadScore";
 import CustomerMemory from "./models/CustomerMemory";
 import UsageRecord from "./models/UsageRecord";
+import SupportTicket from "./models/SupportTicket";
 
 Lead.belongsTo(Customer, {
   foreignKey: "customerId",
@@ -91,6 +92,10 @@ async function bootstrap() {
     await sequelize.authenticate();
 
     console.log("✅ MySQL connected successfully");
+
+    // Create the support table if it is missing; sync() does not alter existing columns.
+    await SupportTicket.sync();
+    console.log("✅ Support tickets table is ready");
 
     if (process.env.NODE_ENV !== "production") {
       await sequelize.sync();
