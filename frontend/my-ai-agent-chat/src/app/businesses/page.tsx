@@ -11,6 +11,8 @@ import {
   Building2,
   Loader2,
   Search,
+  Plus,
+  X,
   Store,
 } from "lucide-react";
 import BusinessesError from "./BusinessesError";
@@ -47,6 +49,29 @@ export default function BusinessesPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [form, setForm] = useState({ name: "", slug: "", email: "", phone: "", ownerFirstName: "", ownerLastName: "", ownerEmail: "", ownerPassword: "" });
+
+  async function handleCreateBusiness(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCreating(true);
+    setCreateError("");
+    try {
+      const result = await api<{ success: boolean; data: Business; message?: string }>("/admin/businesses", {
+        method: "POST",
+        body: JSON.stringify(form),
+      });
+      setBusinesses((current) => [result.data, ...(current || [])]);
+      setCreateOpen(false);
+      setForm({ name: "", slug: "", email: "", phone: "", ownerFirstName: "", ownerLastName: "", ownerEmail: "", ownerPassword: "" });
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "ساخت کسب‌وکار ناموفق بود.");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -172,11 +197,16 @@ export default function BusinessesPage() {
 
   return (
     <Shell>
-      <PageHeader
-        eyebrow="BUSINESSES"
-        title="کسب‌وکارها"
-        description="مدیریت و مشاهده وضعیت کسب‌وکارهای پلتفرم"
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PageHeader
+          eyebrow="BUSINESSES"
+          title="کسب‌وکارها"
+          description="مدیریت و مشاهده وضعیت کسب‌وکارهای پلتفرم"
+        />
+        <button type="button" onClick={() => { setCreateError(""); setCreateOpen(true); }} className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#10706B] px-4 text-sm font-bold text-white transition hover:bg-[#0B5C58]">
+          <Plus size={17} /> ایجاد کسب‌وکار
+        </button>
+      </div>
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -356,6 +386,42 @@ export default function BusinessesPage() {
           </div>
         )}
       </div>
+
+      {createOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#0B2B29]/50 p-4" role="dialog" aria-modal="true" aria-labelledby="create-business-title">
+          <form onSubmit={handleCreateBusiness} className="my-6 w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 id="create-business-title" className="text-lg font-black text-[#0B2B29]">ایجاد کسب‌وکار و حساب مشتری</h2>
+                <p className="mt-1 text-xs text-[#7A8785]">اطلاعات ورود این بخش برای پنل مشتریان استفاده می‌شود.</p>
+              </div>
+              <button type="button" onClick={() => setCreateOpen(false)} aria-label="بستن" className="rounded-lg p-2 text-[#7A8785] hover:bg-[#F1F5F4]"><X size={18} /></button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                ["name","نام کسب‌وکار","مثلاً فروشگاه من","text"],
+                ["slug","شناسه انگلیسی","my-store","text"],
+                ["email","ایمیل کسب‌وکار","info@example.com","email"],
+                ["phone","شماره تماس","09...","tel"],
+                ["ownerFirstName","نام مدیر","حسین","text"],
+                ["ownerLastName","نام خانوادگی مدیر","خسای‌پور","text"],
+                ["ownerEmail","ایمیل ورود پنل مشتری","admin@example.com","email"],
+                ["ownerPassword","رمز عبور اولیه (حداقل ۸ کاراکتر)","••••••••","password"],
+              ].map(([key,label,placeholder,type]) => (
+                <label key={key} className="block text-xs font-bold text-[#4A5856]">
+                  {label}
+                  <input required={key !== "phone" && key !== "ownerFirstName" && key !== "ownerLastName"} type={type} minLength={key === "ownerPassword" ? 8 : undefined} autoComplete={key === "ownerPassword" ? "new-password" : "off"} value={form[key as keyof typeof form]} onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value, ...(key === "name" && !current.slug ? { slug: e.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") } : {}) }))} placeholder={placeholder} className="mt-1.5 h-11 w-full rounded-xl border border-[#E1E7E5] px-3 text-sm font-medium outline-none focus:border-[#10706B] focus:ring-2 focus:ring-[#10706B]/10" />
+                </label>
+              ))}
+            </div>
+            {createError && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700">{createError}</p>}
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setCreateOpen(false)} className="rounded-xl border border-[#E1E7E5] px-4 py-2.5 text-sm font-bold text-[#4A5856]">انصراف</button>
+              <button type="submit" disabled={creating} className="inline-flex items-center gap-2 rounded-xl bg-[#10706B] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">{creating && <Loader2 size={15} className="animate-spin" />}{creating ? "در حال ایجاد..." : "ایجاد حساب مشتری"}</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="mt-4 flex items-center justify-center gap-2 text-[11px] font-medium text-[#9AA5A3]">
