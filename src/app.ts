@@ -32,6 +32,7 @@ import adminAuthRoutes from "./modules/admin/auth/admin-auth.routes";
 import adminUsageRoutes from "./modules/admin/usage.routes";
 import adminSupportRoutes from "./modules/admin/support.routes";
 import supportRoutes from "./modules/support/support.routes";
+import usageRoutes from "./modules/usage/usage.routes";
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -168,4 +169,5 @@ app.use("/api/v1/admin/auth", adminAuthRoutes);
 app.use("/api/v1/admin/usage", adminUsageRoutes);
 app.use("/api/v1/admin/support", adminSupportRoutes);
 app.use("/api/v1/support", supportRoutes);
+app.use("/api/v1/usage", usageRoutes);
 export default app;

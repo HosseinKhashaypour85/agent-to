@@ -1,0 +1,4 @@
+"use client";
+import CustomerShell from "@/components/CustomerShell";
+import { AlertCircle } from "lucide-react";
+export default function CustomerSubscriptionPage(){return <CustomerShell><div className="mb-7"><p className="mb-2 text-xs font-bold text-[#10706B]">حساب کاربری</p><h1 className="text-2xl font-black">اشتراک و پرداخت</h1><p className="mt-2 text-sm text-[#7D8D89]">وضعیت اشتراک باید از API اختصاصی tenant دریافت شود.</p></div><div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-7 text-amber-900"><AlertCircle className="mt-1 shrink-0" size={20}/><p>در بک‌اند فعلی endpoint امن برای خواندن اشتراک همین کسب‌وکار وجود ندارد. برای جلوگیری از نمایش پلن، قیمت یا تاریخ تمدید ساختگی، اطلاعات اشتراک تا اضافه‌شدن این API نمایش داده نمی‌شود.</p></div></CustomerShell>}
