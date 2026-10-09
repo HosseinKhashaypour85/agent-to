@@ -14,6 +14,7 @@ interface SubscriptionAttributes {
 
   startsAt: Date;
   expiresAt: Date;
+  startedAt: Date;
   cancelledAt: Date | null;
 
   createdAt?: Date;
@@ -23,7 +24,11 @@ interface SubscriptionAttributes {
 interface SubscriptionCreationAttributes
   extends Optional<
     SubscriptionAttributes,
-    "id" | "cancelledAt" | "createdAt" | "updatedAt"
+    | "id"
+    | "startedAt"
+    | "cancelledAt"
+    | "createdAt"
+    | "updatedAt"
   > {}
 
 class Subscription
@@ -45,6 +50,7 @@ class Subscription
 
   declare startsAt: Date;
   declare expiresAt: Date;
+  declare startedAt: Date;
   declare cancelledAt: Date | null;
 
   declare readonly createdAt: Date;
@@ -86,6 +92,11 @@ Subscription.init(
     },
 
     expiresAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+
+    startedAt: {
       type: DataTypes.DATE,
       allowNull: false,
     },
