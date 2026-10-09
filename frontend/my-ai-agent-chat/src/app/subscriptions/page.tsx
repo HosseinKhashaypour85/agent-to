@@ -336,7 +336,7 @@ export default function Subscriptions() {
                   ? "ابتدا یک پلن ایجاد کنید"
                   : "افزودن اشتراک"
             }
-            className="flex h-11 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={18} />
             افزودن اشتراک
@@ -379,7 +379,7 @@ export default function Subscriptions() {
             label: "کل اشتراک‌ها",
             value: counts.total,
             icon: CreditCard,
-            color: "text-brand-600",
+            color: "text-emerald-600",
           },
           {
             label: "فعال",
@@ -424,14 +424,14 @@ export default function Subscriptions() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="جست‌وجوی کسب‌وکار، پلن یا شناسه..."
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white pr-10 pl-3 text-sm outline-none focus:border-brand-600"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white pr-10 pl-3 text-sm outline-none focus:border-emerald-600"
             />
           </div>
 
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-brand-600"
+            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-600"
           >
             <option value="ALL">همه وضعیت‌ها</option>
             <option value="ACTIVE">فعال</option>
@@ -473,7 +473,7 @@ export default function Subscriptions() {
                   type="button"
                   onClick={openCreate}
                   disabled={!canCreate}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Plus size={18} />
                   افزودن اولین اشتراک
@@ -507,7 +507,7 @@ export default function Subscriptions() {
                   <tr key={item.id} className="transition hover:bg-slate-50/70">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
                           <Building2 size={18} />
                         </div>
                         <div>
@@ -553,7 +553,7 @@ export default function Subscriptions() {
                         <button
                           onClick={() => openEdit(item)}
                           title="ویرایش اشتراک"
-                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-brand-600 hover:text-brand-700"
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-emerald-600 hover:text-emerald-700"
                         >
                           <Pencil size={16} />
                         </button>
@@ -631,7 +631,7 @@ export default function Subscriptions() {
                     value={form.tenantId}
                     disabled={Boolean(editing)}
                     onChange={(e) => updateField("tenantId", e.target.value)}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-brand-600 disabled:bg-slate-100"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-600 disabled:bg-slate-100"
                   >
                     <option value="">انتخاب کسب‌وکار</option>
                     {businesses.map((business) => (
@@ -655,7 +655,7 @@ export default function Subscriptions() {
                     required
                     value={form.planId}
                     onChange={(e) => updateField("planId", e.target.value)}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-brand-600"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-600"
                   >
                     <option value="">انتخاب پلن</option>
                     {plans.map((plan) => (
@@ -682,7 +682,7 @@ export default function Subscriptions() {
                       type="datetime-local"
                       value={form.startsAt}
                       onChange={(e) => updateField("startsAt", e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm outline-none focus:border-brand-600"
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm outline-none focus:border-emerald-600"
                     />
                   </div>
                 </label>
@@ -702,7 +702,7 @@ export default function Subscriptions() {
                       min={form.startsAt || undefined}
                       value={form.expiresAt}
                       onChange={(e) => updateField("expiresAt", e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm outline-none focus:border-brand-600"
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm outline-none focus:border-emerald-600"
                     />
                   </div>
                 </label>
@@ -716,7 +716,7 @@ export default function Subscriptions() {
                     onChange={(e) =>
                       updateField("status", e.target.value as Status)
                     }
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-brand-600"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-600"
                   >
                     <option value="ACTIVE">فعال</option>
                     <option value="EXPIRED">منقضی</option>
@@ -738,7 +738,7 @@ export default function Subscriptions() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 text-sm font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? (
                     <>
