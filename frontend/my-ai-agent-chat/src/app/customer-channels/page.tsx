@@ -1,0 +1,18 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import CustomerShell from "@/components/CustomerShell";
+import { api } from "@/lib/api";
+import { AlertCircle, LoaderCircle, Radio, RefreshCw } from "lucide-react";
+
+type Channel={id:string;type:string;name:string;isActive:boolean;config?:Record<string,unknown>|null};
+const names:Record<string,string>={WEBSITE:"وب‌سایت",WORDPRESS:"وردپرس",TELEGRAM:"تلگرام",WHATSAPP:"واتساپ"};
+export default function CustomerChannelsPage(){
+ const [channels,setChannels]=useState<Channel[]>([]);const [loading,setLoading]=useState(true);const [busy,setBusy]=useState("");const [error,setError]=useState("");const [notice,setNotice]=useState("");
+ const load=useCallback(async()=>{setLoading(true);setError("");try{const r=await api<{success:boolean;channels:Channel[]}>("/agent/channels");setChannels(r.channels||[]);}catch(e){setError(e instanceof Error?e.message:"دریافت کانال‌ها ناموفق بود.");}finally{setLoading(false);}},[]);
+ useEffect(()=>{void load();},[load]);
+ async function toggle(channel:Channel){setBusy(channel.id);setError("");setNotice("");try{const r=await api<{channel:Channel}>(`/agent/channels/${encodeURIComponent(channel.id)}/toggle`,{method:"PATCH",body:JSON.stringify({isActive:!channel.isActive})});setChannels(old=>old.map(c=>c.id===channel.id?r.channel:c));setNotice("وضعیت کانال ذخیره شد.");}catch(e){setError(e instanceof Error?e.message:"تغییر وضعیت کانال ناموفق بود.");}finally{setBusy("");}}
+ return <CustomerShell><div className="mb-7 flex items-end justify-between gap-4"><div><p className="mb-2 text-xs font-bold text-[#10706B]">فضای کسب‌وکار</p><h1 className="text-2xl font-black">کانال‌های ارتباطی</h1><p className="mt-2 text-sm text-[#7D8D89]">وضعیت کانال‌های واقعی ثبت‌شده برای ایجنت شما.</p></div><button onClick={()=>void load()} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-3 text-sm font-bold"><RefreshCw size={16}/>تازه‌سازی</button></div>
+ {error&&<div role="alert" className="mb-4 flex gap-2 rounded-xl bg-[#FFF1F1] p-4 text-sm text-[#A62B2B]"><AlertCircle size={18}/>{error}</div>}{notice&&<p role="status" className="mb-4 rounded-xl bg-[#EFF9F4] p-3 text-sm text-[#176B4D]">{notice}</p>}
+ {loading?<div className="flex justify-center gap-2 rounded-2xl border bg-white p-12 text-sm text-[#87938F]"><LoaderCircle size={18} className="animate-spin"/>در حال دریافت...</div>:channels.length===0?<div className="rounded-2xl border bg-white p-10 text-center"><Radio size={28} className="mx-auto text-[#87938F]"/><h2 className="mt-3 font-bold">کانالی ثبت نشده</h2><p className="mt-2 text-sm text-[#87938F]">API هنوز کانالی برای ایجنت این حساب برنگردانده است.</p></div>:<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{channels.map(c=><article key={c.id} className="rounded-2xl border border-[#E4EBE8] bg-white p-5"><div className="flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#E8F4F0] text-[#10706B]"><Radio size={20}/></span><span className={`rounded-full px-3 py-1 text-xs font-bold ${c.isActive?"bg-[#E7F5EF] text-[#16835D]":"bg-[#F1F3F2] text-[#84918D]"}`}>{c.isActive?"فعال":"غیرفعال"}</span></div><h2 className="mt-4 font-extrabold">{names[c.type]||c.name}</h2><p className="mt-1 text-xs text-[#87938F]">{c.name} · {c.type}</p><button disabled={busy===c.id} onClick={()=>void toggle(c)} className="mt-5 w-full rounded-xl border border-[#DDE7E2] px-4 py-3 text-sm font-bold disabled:opacity-60">{busy===c.id?"در حال ذخیره...":c.isActive?"غیرفعال‌سازی":"فعال‌سازی"}</button></article>)}</div>}</CustomerShell>;
+}
