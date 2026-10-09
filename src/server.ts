@@ -21,6 +21,7 @@ import SubscriptionPlan from "./models/SubscriptionPlan";
 import Subscription from "./models/Subscription";
 import LeadScore from "./models/LeadScore";
 import CustomerMemory from "./models/CustomerMemory";
+import UsageRecord from "./models/UsageRecord";
 
 Lead.belongsTo(Customer, {
   foreignKey: "customerId",
