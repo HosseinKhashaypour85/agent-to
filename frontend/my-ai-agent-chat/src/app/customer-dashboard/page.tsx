@@ -11,7 +11,7 @@ type Customer = { id: string; firstName?: string | null; lastName?: string | nul
 type Conversation = { id: string; status?: string; createdAt?: string; channel?: string };
 type Agent = { id?: string; name?: string; isActive?: boolean; status?: string };
 type Usage = { summary?: { aiMessages?: number; inputTokens?: number; outputTokens?: number; totalTokens?: number; requests?: number } };
-type DashboardData = { products: Product[]; customers: Customer[]; conversations: Conversation[]; agent: Agent | null; usage: Usage | null };
+type DashboardData = { products: Product[]; productsTotal: number; customers: Customer[]; conversations: Conversation[]; agent: Agent | null; usage: Usage | null };
 const numberFa = (v: number) => new Intl.NumberFormat("fa-IR").format(Number.isFinite(v) ? v : 0);
 const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
 
@@ -44,6 +44,7 @@ export default function CustomerDashboardPage() {
     const usageResult = usage.status === "fulfilled" && usage.value?.success ? usage.value.data : null;
     setData({
       products: unwrapList(products, ["products"]),
+      productsTotal: products.status === "fulfilled" ? Number(products.value?.pagination?.total ?? products.value?.total ?? unwrapList(products, ["products"]).length) : 0,
       customers: unwrapList(customers),
       conversations: unwrapList(conversations),
       agent: agentResult,
@@ -55,7 +56,7 @@ export default function CustomerDashboardPage() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const productCount = data?.products.length ?? 0;
+  const productCount = data?.productsTotal ?? 0;
   const customerCount = data?.customers.length ?? 0;
   const conversationsThisMonth = (data?.conversations ?? []).filter(c => c.createdAt && new Date(c.createdAt) >= monthStart).length;
   const usageSummary = data?.usage?.summary;
