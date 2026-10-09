@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -122,6 +121,8 @@ export default function Subscriptions() {
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
+  const canCreate = businesses.length > 0 && plans.length > 0;
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -155,11 +156,23 @@ export default function Subscriptions() {
   }, [loadData]);
 
   function openCreate() {
+    if (!canCreate) {
+      setError(
+        !businesses.length
+          ? "برای ساخت اشتراک، ابتدا باید حداقل یک کسب‌وکار داشته باشید."
+          : "برای ساخت اشتراک، ابتدا باید حداقل یک پلن داشته باشید."
+      );
+      return;
+    }
+
     setEditing(null);
     setForm({
       ...emptyForm,
       tenantId: businesses[0]?.id || "",
-      planId: plans.find((p) => p.status !== "INACTIVE")?.id || plans[0]?.id || "",
+      planId:
+        plans.find((p) => p.status !== "INACTIVE")?.id ||
+        plans[0]?.id ||
+        "",
       startsAt: toDateInput(new Date().toISOString()),
       expiresAt: toDateInput(
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -313,9 +326,17 @@ export default function Subscriptions() {
         description="مدیریت اشتراک کسب‌وکارها، پلن‌ها و تاریخ اعتبار سرویس"
         action={
           <button
+            type="button"
             onClick={openCreate}
-            disabled={!businesses.length || !plans.length}
-            className="flex h-11 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!canCreate}
+            title={
+              !businesses.length
+                ? "ابتدا یک کسب‌وکار ایجاد کنید"
+                : !plans.length
+                  ? "ابتدا یک پلن ایجاد کنید"
+                  : "افزودن اشتراک"
+            }
+            className="flex h-11 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={18} />
             افزودن اشتراک
@@ -435,7 +456,7 @@ export default function Subscriptions() {
             در حال دریافت اطلاعات...
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="flex min-h-56 flex-col items-center justify-center px-5 text-center">
+          <div className="flex min-h-56 flex-col items-center justify-center px-5 py-10 text-center">
             <CreditCard size={35} className="mb-3 text-slate-300" />
             <p className="font-bold text-slate-700">
               {items.length ? "نتیجه‌ای پیدا نشد" : "هنوز اشتراکی ثبت نشده"}
@@ -443,8 +464,29 @@ export default function Subscriptions() {
             <p className="mt-2 text-sm text-slate-400">
               {items.length
                 ? "عبارت جست‌وجو یا فیلتر وضعیت را تغییر بده."
-                : "با دکمه افزودن اشتراک، اولین اشتراک را ثبت کن."}
+                : "با دکمه زیر، اولین اشتراک را ثبت کن."}
             </p>
+
+            {!items.length && (
+              <div className="mt-5">
+                <button
+                  type="button"
+                  onClick={openCreate}
+                  disabled={!canCreate}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Plus size={18} />
+                  افزودن اولین اشتراک
+                </button>
+                {!canCreate && (
+                  <p className="mt-2 text-xs text-rose-600">
+                    {!businesses.length
+                      ? "برای ساخت اشتراک، ابتدا باید حداقل یک کسب‌وکار داشته باشید."
+                      : "برای ساخت اشتراک، ابتدا باید حداقل یک پلن داشته باشید."}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -696,7 +738,7 @@ export default function Subscriptions() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 text-sm font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? (
                     <>
