@@ -3,29 +3,146 @@
 import { useState } from "react";
 import Link from "next/link";
 import CustomerShell from "@/components/CustomerShell";
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, CircleAlert, CloudUpload, Database, Globe, KeyRound, Link2, LoaderCircle, Plus, RefreshCw, ShieldCheck, ShoppingBag, X } from "lucide-react";
+import { api } from "@/lib/api";
+import { ArrowLeft, ArrowRight, CircleAlert, Database, Link2, LoaderCircle, RefreshCw, ShieldCheck, DownloadCloud, CheckCircle2 } from "lucide-react";
 
-type SourceType = "api" | "website" | "csv" | "json";
-const types: {id:SourceType; title:string; desc:string; icon:typeof Link2}[] = [
- {id:"api",title:"اتصال از طریق API",desc:"اتصال مستقیم به کاتالوگ موجود",icon:Link2},
- {id:"website",title:"فروشگاه اینترنتی",desc:"کشف صفحات محصول از وب‌سایت",icon:Globe},
- {id:"csv",title:"فایل CSV",desc:"ورود محصولات از فایل جدولی",icon:CloudUpload},
- {id:"json",title:"فایل JSON",desc:"ورود اطلاعات ساختاریافته",icon:Database},
-];
-const products = [
- {name:"کفش روزمره مدل Air",sku:"SH-1042",price:"۲٬۴۹۰٬۰۰۰",category:"پوشاک",status:"آماده",tone:"bg-[#E6F3EF]"},
- {name:"هدفون بی‌سیم Pro",sku:"EL-2081",price:"۳٬۸۵۰٬۰۰۰",category:"الکترونیک",status:"آماده",tone:"bg-[#EAF0FF]"},
- {name:"کوله‌پشتی شهری",sku:"BG-1105",price:"۱٬۷۹۰٬۰۰۰",category:"اکسسوری",status:"بررسی",tone:"bg-[#FFF2DF]"},
-];
-export default function ProductSourcesPage(){
- const [step,setStep]=useState(1); const [source,setSource]=useState<SourceType>("api"); const [name,setName]=useState("فروشگاه من"); const [url,setUrl]=useState(""); const [auth,setAuth]=useState("bearer"); const [token,setToken]=useState(""); const [tested,setTested]=useState(false);
- return <CustomerShell>
-  <div className="mb-7"><Link href="/customer-dashboard" className="mb-4 inline-flex items-center gap-2 text-xs font-semibold text-[#7D8D89] hover:text-[#10706B]"><ArrowRight size={15}/> بازگشت به داشبورد</Link><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="mb-2 text-xs font-bold text-[#10706B]">کاتالوگ هوشمند / منابع</p><h1 className="text-2xl font-black">اتصال منبع محصولات</h1><p className="mt-2 text-sm text-[#7D8D89]">محصولاتت رو وارد کن تا ایجنت از اطلاعات دقیق‌تری استفاده کنه.</p></div><span className="inline-flex items-center gap-2 rounded-full border border-[#DCEAE6] bg-white px-3 py-2 text-xs text-[#6D7E79]"><ShieldCheck size={15} className="text-[#10706B]"/> اطلاعات اتصال رمزگذاری‌شده</span></div></div>
-  <div className="mb-6 grid grid-cols-3 gap-2">{[{n:1,t:"انتخاب منبع"},{n:2,t:"تنظیم اتصال"},{n:3,t:"پیش‌نمایش"}].map(s=><div key={s.n} className={`rounded-xl border p-3 ${step===s.n?"border-[#B7DCD2] bg-[#EFF8F5]":"border-[#E4EBE8] bg-white"}`}><div className="flex items-center gap-2"><span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-bold ${step>=s.n?"bg-[#10706B] text-white":"bg-[#EEF2F0] text-[#83918D]"}`}>{step>s.n?<Check size={14}/>:s.n}</span><span className="text-xs font-bold">{s.t}</span></div></div>)}</div>
-  <div className="grid gap-5 xl:grid-cols-[1fr_300px]"><section className="rounded-2xl border border-[#E4EBE8] bg-white p-5 sm:p-7">
-   {step===1&&<><h2 className="text-lg font-extrabold">محصولاتت کجا قرار دارن؟</h2><p className="mt-1 text-sm text-[#87938F]">روش اتصال مناسب رو انتخاب کن.</p><div className="mt-5 grid gap-3 sm:grid-cols-2">{types.map(t=>{const Icon=t.icon;return <button key={t.id} onClick={()=>setSource(t.id)} className={`rounded-2xl border p-4 text-right transition ${source===t.id?"border-[#10706B] bg-[#F0F8F5] ring-1 ring-[#10706B]/15":"border-[#E5ECE9] hover:border-[#B8D5CE]"}`}><span className={`mb-4 grid h-10 w-10 place-items-center rounded-xl ${source===t.id?"bg-[#10706B] text-white":"bg-[#F1F6F4] text-[#10706B]"}`}><Icon size={19}/></span><b className="block text-sm">{t.title}</b><span className="mt-1 block text-xs leading-6 text-[#87938F]">{t.desc}</span></button>})}</div><div className="mt-6 flex justify-end"><button onClick={()=>setStep(2)} className="inline-flex items-center gap-2 rounded-xl bg-[#10706B] px-5 py-3 text-sm font-bold text-white">ادامه <ArrowLeft size={16}/></button></div></>}
-   {step===2&&<><h2 className="text-lg font-extrabold">تنظیم اتصال</h2><p className="mt-1 text-sm text-[#87938F]">اطلاعات منبع رو وارد کن. این فرم فعلاً پیش‌نمایش UI است.</p><div className="mt-5 space-y-4"><label className="block"><span className="mb-2 block text-xs font-bold">نام منبع</span><input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-xl border border-[#DDE6E2] px-4 py-3 text-sm outline-none focus:border-[#10706B]" placeholder="مثلاً فروشگاه اصلی"/></label>{(source==="api"||source==="website")&&<label className="block"><span className="mb-2 block text-xs font-bold">{source==="api"?"آدرس API محصولات":"آدرس وب‌سایت"}</span><input dir="ltr" value={url} onChange={e=>{setUrl(e.target.value);setTested(false)}} className="w-full rounded-xl border border-[#DDE6E2] px-4 py-3 text-left text-sm outline-none focus:border-[#10706B]" placeholder={source==="api"?"https://shop.example.com/api/products":"https://shop.example.com"}/></label>}{source==="api"&&<><label className="block"><span className="mb-2 block text-xs font-bold">روش احراز هویت</span><select value={auth} onChange={e=>setAuth(e.target.value)} className="w-full rounded-xl border border-[#DDE6E2] bg-white px-4 py-3 text-sm"><option value="none">بدون احراز هویت</option><option value="apiKey">API Key</option><option value="bearer">Bearer Token</option></select></label>{auth!=="none"&&<label className="block"><span className="mb-2 block text-xs font-bold">کلید دسترسی</span><div className="flex items-center gap-2 rounded-xl border border-[#DDE6E2] px-3"><KeyRound size={16} className="text-[#87938F]"/><input type="password" value={token} onChange={e=>setToken(e.target.value)} className="w-full py-3 text-sm outline-none" placeholder="توکن فقط برای نمایش فرم"/></div></label>}</>} {(source==="csv"||source==="json")&&<label className="flex cursor-pointer flex-col items-center rounded-2xl border border-dashed border-[#B9D8CF] bg-[#F7FBF9] p-8 text-center"><CloudUpload size={28} className="text-[#10706B]"/><b className="mt-3 text-sm">فایل را انتخاب یا اینجا رها کن</b><span className="mt-1 text-xs text-[#87938F]">فرمت {source.toUpperCase()}</span><input type="file" accept={source==="csv"?".csv":".json,application/json"} className="mt-4 max-w-full text-xs" /></label>}</div><div className="mt-6 flex flex-wrap justify-between gap-3"><button onClick={()=>setStep(1)} className="rounded-xl border border-[#E0E8E4] px-4 py-3 text-sm font-bold">مرحله قبل</button><button onClick={()=>{setTested(true);}} className="inline-flex items-center gap-2 rounded-xl border border-[#BFDCD3] px-4 py-3 text-sm font-bold text-[#10706B]"><RefreshCw size={15}/> نمایش تست اتصال</button><button onClick={()=>setStep(3)} className="inline-flex items-center gap-2 rounded-xl bg-[#10706B] px-5 py-3 text-sm font-bold text-white">پیش‌نمایش محصولات <ArrowLeft size={16}/></button></div>{tested&&<p className="mt-4 rounded-xl bg-[#FFF6E8] p-3 text-xs leading-6 text-[#9A681B]"><CircleAlert size={14} className="ml-1 inline"/> این فرم فعلاً فقط نمایشی است؛ اتصال واقعی API هنوز به بک‌اند متصل نشده است.</p>}</>}
-   {step===3&&<><h2 className="text-lg font-extrabold">پیش‌نمایش کاتالوگ</h2><p className="mt-1 text-sm text-[#87938F]">نمونه نمایش محصول پیش از تأیید ورود.</p><div className="mt-5 overflow-x-auto rounded-xl border border-[#E4EBE8]"><table className="w-full min-w-[570px] text-right text-xs"><thead className="bg-[#F7FAF8] text-[#7D8D89]"><tr>{["محصول","شناسه","دسته‌بندی","قیمت","وضعیت"].map(x=><th key={x} className="px-4 py-3 font-semibold">{x}</th>)}</tr></thead><tbody>{products.map(p=><tr key={p.sku} className="border-t border-[#EDF1EF]"><td className="px-4 py-4 font-bold">{p.name}</td><td className="px-4 py-4 text-[#87938F]" dir="ltr">{p.sku}</td><td className="px-4 py-4">{p.category}</td><td className="px-4 py-4 whitespace-nowrap">{p.price} تومان</td><td className="px-4 py-4"><span className={`rounded-full px-2 py-1 ${p.status==="آماده"?"bg-[#E8F5EF] text-[#16835D]":"bg-[#FFF2DF] text-[#A66B14]"}`}>{p.status}</span></td></tr>)}</tbody></table></div><div className="mt-5 rounded-xl bg-[#F0F8F5] p-4 text-xs leading-6 text-[#55746B]">در نسخه متصل به بک‌اند، تعداد محصولات واقعی، موارد تکراری و خطاهای اعتبارسنجی در این بخش نمایش داده می‌شود.</div><div className="mt-6 flex justify-between"><button onClick={()=>setStep(2)} className="rounded-xl border border-[#E0E8E4] px-4 py-3 text-sm font-bold">مرحله قبل</button><button onClick={()=>setStep(1)} className="rounded-xl bg-[#10706B] px-5 py-3 text-sm font-bold text-white">اتصال منبع دیگر</button></div></>}
-  </section><aside className="space-y-4"><div className="rounded-2xl border border-[#E4EBE8] bg-white p-5"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#E8F4F0] text-[#10706B]"><ShieldCheck size={19}/></span><h3 className="mt-4 font-extrabold">اتصال امن</h3><p className="mt-2 text-xs leading-6 text-[#7D8D89]">کلیدهای دسترسی باید در سرور امن نگهداری شوند و هیچ‌وقت در گزارش‌ها یا پاسخ API نمایش داده نشوند.</p></div><div className="rounded-2xl border border-[#E4EBE8] bg-white p-5"><h3 className="font-extrabold">بعد از اتصال چه می‌شود؟</h3><div className="mt-4 space-y-4">{[{n:"۱",t:"دریافت محصولات"},{n:"۲",t:"تشخیص فیلدها و تکراری‌ها"},{n:"۳",t:"تحلیل هوشمند"},{n:"۴",t:"آماده‌سازی برای ایجنت"}].map(x=><div key={x.n} className="flex items-center gap-3"><span className="grid h-7 w-7 place-items-center rounded-lg bg-[#F0F6F4] text-xs font-bold text-[#10706B]">{x.n}</span><span className="text-xs font-semibold">{x.t}</span></div>)}</div></div></aside></div>
- </CustomerShell>;
+type ExternalProduct = {
+  id: string | number;
+  title?: string;
+  name?: string;
+  description?: string;
+  price?: number;
+  category?: string;
+  image?: string;
+  imageUrl?: string;
+  rating?: { rate?: number; count?: number };
+  sku?: string;
+  stock?: number;
+};
+
+function getProductName(product: ExternalProduct) {
+  return product.title || product.name || "";
+}
+
+export default function ProductSourcesPage() {
+  const [name, setName] = useState("Fake Store API");
+  const [url, setUrl] = useState("https://fakestoreapi.com/products");
+  const [auth, setAuth] = useState<"none" | "apiKey" | "bearer">("none");
+  const [token, setToken] = useState("");
+  const [products, setProducts] = useState<ExternalProduct[]>([]);
+  const [tested, setTested] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  async function testConnection() {
+    setError("");
+    setNotice("");
+    setTested(false);
+    setLoading(true);
+    try {
+      const parsed = new URL(url.trim());
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        throw new Error("آدرس API معتبر نیست.");
+      }
+      const headers: Record<string, string> = { Accept: "application/json" };
+      if (auth === "bearer" && token.trim()) headers.Authorization = `Bearer ${token.trim()}`;
+      if (auth === "apiKey" && token.trim()) headers["x-api-key"] = token.trim();
+      const response = await fetch(parsed.toString(), { method: "GET", headers, cache: "no-store" });
+      if (!response.ok) throw new Error(`API پاسخ ${response.status} برگرداند.`);
+      const data = await response.json();
+      const list = Array.isArray(data) ? data : Array.isArray(data.products) ? data.products : Array.isArray(data.data) ? data.data : null;
+      if (!list) throw new Error("ساختار پاسخ API آرایه محصولات نیست.");
+      const valid = list.filter((item: ExternalProduct) => getProductName(item));
+      setProducts(valid);
+      setTested(true);
+      setNotice(`اتصال موفق بود؛ ${valid.length} محصول دریافت شد.`);
+    } catch (e) {
+      setProducts([]);
+      setError(e instanceof Error ? e.message : "اتصال به API ناموفق بود.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function importProducts() {
+    setError("");
+    setNotice("");
+    setImporting(true);
+    let imported = 0;
+    const failures: string[] = [];
+    try {
+      for (const product of products) {
+        try {
+          await api("/agent/products", {
+            method: "POST",
+            body: JSON.stringify({
+              externalId: String(product.id),
+              name: getProductName(product),
+              description: product.description || "",
+              price: typeof product.price === "number" ? product.price : undefined,
+              currency: "USD",
+              category: product.category || "",
+              imageUrl: product.image || product.imageUrl || "",
+              productUrl: "",
+              sku: product.sku || `API-${product.id}`,
+              stock: typeof product.stock === "number" ? product.stock : undefined,
+              source: "CUSTOM_API",
+              sourceType: "CUSTOM_API",
+              rawData: product,
+              isActive: true,
+            }),
+          });
+          imported += 1;
+        } catch (e) {
+          failures.push(`${getProductName(product)}: ${e instanceof Error ? e.message : "خطا"}`);
+        }
+      }
+      if (failures.length) {
+        setNotice(`${imported} محصول از ${products.length} محصول وارد شد.`);
+        setError(`ورود ${failures.length} محصول ناموفق بود. ممکن است دسترسی تکراری یا خطای API وجود داشته باشد. ${failures.slice(0, 2).join(" | ")}`);
+      } else {
+        setNotice(`${imported} محصول با موفقیت در کاتالوگ حساب شما ذخیره شد.`);
+      }
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  return <CustomerShell>
+    <div className="mb-7">
+      <Link href="/customer-dashboard" className="mb-4 inline-flex items-center gap-2 text-xs font-semibold text-[#7D8D89] hover:text-[#10706B]"><ArrowRight size={15}/> بازگشت به داشبورد</Link>
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div><p className="mb-2 text-xs font-bold text-[#10706B]">کاتالوگ هوشمند / منابع</p><h1 className="text-2xl font-black">اتصال منبع محصولات</h1><p className="mt-2 text-sm text-[#7D8D89]">محصولات را از API دریافت و در کاتالوگ حساب خود ذخیره کن.</p></div>
+        <span className="inline-flex items-center gap-2 rounded-full border border-[#DCEAE6] bg-white px-3 py-2 text-xs text-[#6D7E79]"><ShieldCheck size={15} className="text-[#10706B]"/> اتصال مستقیم به API</span>
+      </div>
+    </div>
+
+    <div className="grid gap-5 xl:grid-cols-[1fr_300px]">
+      <section className="rounded-2xl border border-[#E4EBE8] bg-white p-5 sm:p-7">
+        <div className="mb-5 flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#E8F4F0] text-[#10706B]"><Link2 size={20}/></span><div><h2 className="font-extrabold">تنظیم اتصال API</h2><p className="mt-1 text-xs text-[#87938F]">آدرس پیش‌فرض روی Fake Store API تنظیم شده است.</p></div></div>
+        <div className="space-y-4">
+          <label className="block"><span className="mb-2 block text-xs font-bold">نام منبع</span><input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-xl border border-[#DDE6E2] px-4 py-3 text-sm outline-none focus:border-[#10706B]" placeholder="مثلاً فروشگاه اصلی"/></label>
+          <label className="block"><span className="mb-2 block text-xs font-bold">آدرس API محصولات</span><input dir="ltr" value={url} onChange={e=>{setUrl(e.target.value);setTested(false);setProducts([]);}} className="w-full rounded-xl border border-[#DDE6E2] px-4 py-3 text-left text-sm outline-none focus:border-[#10706B]" placeholder="https://fakestoreapi.com/products" required type="url"/></label>
+          <label className="block"><span className="mb-2 block text-xs font-bold">روش احراز هویت API منبع</span><select value={auth} onChange={e=>setAuth(e.target.value as "none" | "apiKey" | "bearer")} className="w-full rounded-xl border border-[#DDE6E2] bg-white px-4 py-3 text-sm"><option value="none">بدون احراز هویت</option><option value="apiKey">API Key (هدر x-api-key)</option><option value="bearer">Bearer Token</option></select></label>
+          {auth !== "none" && <label className="block"><span className="mb-2 block text-xs font-bold">کلید دسترسی API منبع</span><input type="password" value={token} onChange={e=>setToken(e.target.value)} className="w-full rounded-xl border border-[#DDE6E2] px-4 py-3 text-sm outline-none focus:border-[#10706B]" placeholder="کلید دسترسی" autoComplete="off"/></label>}
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button onClick={()=>void testConnection()} disabled={loading || !url.trim()} className="inline-flex items-center gap-2 rounded-xl bg-[#10706B] px-5 py-3 text-sm font-bold text-white disabled:opacity-60">{loading?<LoaderCircle size={16} className="animate-spin"/>:<RefreshCw size={16}/>} {loading?"در حال اتصال...":"تست اتصال و دریافت محصولات"}</button>
+          {tested && products.length > 0 && <button onClick={()=>void importProducts()} disabled={importing} className="inline-flex items-center gap-2 rounded-xl border border-[#BFDCD3] px-5 py-3 text-sm font-bold text-[#10706B] disabled:opacity-60">{importing?<LoaderCircle size={16} className="animate-spin"/>:<DownloadCloud size={16}/>} {importing?"در حال ذخیره...":"وارد کردن به کاتالوگ"}</button>}
+        </div>
+        {error && <p role="alert" className="mt-4 flex items-start gap-2 rounded-xl bg-[#FFF1F1] p-3 text-xs leading-6 text-[#A62B2B]"><CircleAlert size={15} className="mt-1 shrink-0"/>{error}</p>}
+        {notice && <p role="status" className="mt-4 flex items-start gap-2 rounded-xl bg-[#EFF9F4] p-3 text-xs leading-6 text-[#176B4D]"><CheckCircle2 size={15} className="mt-1 shrink-0"/>{notice}</p>}
+        {tested && <div className="mt-6">
+          <div className="mb-3 flex items-center justify-between"><h3 className="font-extrabold">پیش‌نمایش محصولات واقعی API</h3><span className="rounded-full bg-[#E8F4F0] px-3 py-1 text-xs font-bold text-[#10706B]">{products.length} محصول</span></div>
+          {products.length === 0 ? <p className="rounded-xl bg-[#F7FAF8] p-4 text-sm text-[#7D8D89]">این API محصولی برنگرداند.</p> : <div className="overflow-x-auto rounded-xl border border-[#E4EBE8]"><table className="w-full min-w-[600px] text-right text-xs"><thead className="bg-[#F7FAF8] text-[#7D8D89]"><tr><th className="px-4 py-3">محصول</th><th className="px-4 py-3">شناسه API</th><th className="px-4 py-3">دسته‌بندی</th><th className="px-4 py-3">قیمت</th></tr></thead><tbody>{products.map((p,i)=><tr key={String(p.id ?? i)} className="border-t border-[#EDF1EF]"><td className="px-4 py-3 font-bold">{getProductName(p)}</td><td dir="ltr" className="px-4 py-3">{p.id}</td><td className="px-4 py-3">{p.category || "—"}</td><td className="px-4 py-3 whitespace-nowrap">{typeof p.price === "number" ? new Intl.NumberFormat("fa-IR").format(p.price) + " USD" : "—"}</td></tr>)}</tbody></table></div>}
+        </div>}
+      </section>
+      <aside className="space-y-4">
+        <div className="rounded-2xl border border-[#E4EBE8] bg-white p-5"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#E8F4F0] text-[#10706B]"><Database size={19}/></span><h3 className="mt-4 font-extrabold">ذخیره در کاتالوگ</h3><p className="mt-2 text-xs leading-6 text-[#7D8D89]">بعد از دریافت محصولات، با دکمه ورود به کاتالوگ، محصولات در API بک‌اند و در حساب مشتری ذخیره می‌شوند. برای ذخیره‌سازی باید وارد پنل شده باشی.</p></div>
+        <div className="rounded-2xl border border-[#E4EBE8] bg-white p-5"><h3 className="font-extrabold">محدودیت Fake Store API</h3><p className="mt-2 text-xs leading-6 text-[#7D8D89]">این سرویس آزمایشی است. اطلاعات دریافتی واقعی است، اما خود سرویس خارجی تضمین ذخیره دائمی تغییرات را نمی‌دهد. محصولات واردشده به کاتالوگ Agent-To در دیتابیس بک‌اند شما ذخیره می‌شوند.</p></div>
+      </aside>
+    </div>
+  </CustomerShell>;
 }
