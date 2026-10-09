@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
+import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Settings as SettingsIcon,
   ShieldCheck,
@@ -17,6 +19,12 @@ import {
   Zap,
   Webhook,
   Database,
+  Sun,
+  Moon,
+  Monitor,
+  Languages,
+  Palette,
+  Check,
 } from "lucide-react";
 
 type Section = {
@@ -87,10 +95,151 @@ const sections: Section[] = [
     iconColor: "text-emerald-600",
     items: ["کلیدهای API", "Webhook", "مستندات"],
   },
+  {
+    key: "appearance",
+    title: "نمایش و زبان",
+    description: "تم رنگی، زبان رابط کاربری و تنظیمات ظاهری",
+    icon: Palette,
+    iconBg: "bg-emerald-50",
+    iconColor: "text-emerald-600",
+    badge: "جدید",
+    items: ["حالت روشن/تیره", "انتخاب زبان", "جهت متن"],
+  },
 ];
 
 export default function Settings() {
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
+
+  const themeOptions = [
+    { value: "light" as const, label: t("theme.light"), icon: Sun, desc: " همیشه روشن" },
+    { value: "dark" as const, label: t("theme.dark"), icon: Moon, desc: " همیشه تیره" },
+    { value: "system" as const, label: t("theme.system"), icon: Monitor, desc: "ตาม تنظیمات سیستم" },
+  ];
+
+  const languageOptions = [
+    { value: "fa" as const, label: t("language.fa"), nativeLabel: "فارسی", dir: "rtl" },
+    { value: "en" as const, label: t("language.en"), nativeLabel: "English", dir: "ltr" },
+    { value: "ar" as const, label: t("language.ar"), nativeLabel: "العربية", dir: "rtl" },
+  ];
+
+  const renderAppearanceSection = () => (
+    <div className="space-y-6">
+      {/* Theme Selector */}
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+            <Palette size={20} />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-slate-100">{t("theme.title")}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t("theme.description")}</p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {themeOptions.map((option) => {
+            const Icon = option.icon;
+            const isActive = theme === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setTheme(option.value)}
+                className={`relative group flex flex-col items-center gap-3 rounded-xl p-5 transition-all duration-200 border-2 ${
+                  isActive
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 ring-1 ring-emerald-500/20"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg"
+                }`}
+              >
+                {isActive && (
+                  <div className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
+                    <Icon size={10} />
+                  </div>
+                )}
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 group-hover:scale-110 transition-transform">
+                  <Icon size={22} />
+                </div>
+                <div className="text-center">
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{option.label}</span>
+                  <span className="block mt-0.5 text-xs text-slate-500 dark:text-slate-400">{option.desc}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <span className="flex items-center gap-1">
+            <span className={`h-3 w-3 rounded-full ${resolvedTheme === "dark" ? "bg-slate-800" : "bg-slate-200"}`} />
+            {t("theme." + (resolvedTheme === "dark" ? "dark" : "light"))} {t("theme.description").includes("سیستم") ? "(" + t("theme.system") + ")" : ""}
+          </span>
+        </div>
+      </section>
+
+      {/* Language Selector */}
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+            <Languages size={20} />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-slate-100">{t("language.title")}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t("language.description")}</p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {languageOptions.map((option) => {
+            const isActive = language === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setLanguage(option.value)}
+                className={`relative group flex flex-col items-center gap-3 rounded-xl p-5 transition-all duration-200 border-2 ${
+                  isActive
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 ring-1 ring-emerald-500/20"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg"
+                }`}
+                dir={option.dir}
+              >
+                {isActive && (
+                  <div className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
+                    <Check size={10} />
+                  </div>
+                )}
+                <div className="text-center">
+                  <span className="text-3xl font-bold">{option.nativeLabel}</span>
+                  <span className="block mt-1 text-sm text-slate-500 dark:text-slate-400">{option.label}</span>
+                  <span className="block mt-0.5 text-xs text-slate-400 dark:text-slate-500 capitalize">{option.dir === "rtl" ? "چپ به راست" : "راست به چپ"}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+
+  if (activeKey === "appearance") {
+    return (
+      <Shell>
+        <PageHeader
+          title={t("settings.appearance")}
+          description={t("theme.description") + " • " + t("language.description")}
+          action={
+            <button
+              onClick={() => setActiveKey(null)}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <ChevronLeft size={16} />
+              بازگشت
+            </button>
+          }
+        />
+        {renderAppearanceSection()}
+      </Shell>
+    );
+  }
 
   return (
     <Shell>

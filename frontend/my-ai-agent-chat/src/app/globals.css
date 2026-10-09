@@ -54,10 +54,136 @@ textarea {
   background: #9ca3af;
 }
 
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Focus styles for dark mode */
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+/* Panel styles for dark mode */
+.dark .panel {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Card styles for dark mode */
+.dark .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Table styles for dark mode */
+.dark table {
+  color: #f1f5f9;
+}
+
+.dark th {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.dark td {
+  border-color: #334155;
+}
+
+.dark tr:hover td {
+  background: #0f172a;
+}
+
+/* Form elements for dark mode */
+.dark input,
+.dark textarea,
+.dark select {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b;
+}
+
+.dark label {
+  color: #e2e8f0;
+}
+
+/* Button styles for dark mode */
+.dark .btn-ghost {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+.dark .btn-ghost:hover {
+  background: #475569;
+}
+
+.dark .btn-primary {
+  background: #14b8a6;
+}
+
+.dark .btn-primary:hover {
+  background: #0d9488;
+}
+
+/* Badge styles for dark mode */
+.dark .badge {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+/* Modal/Dialog for dark mode */
+.dark [role="dialog"],
+.dark .modal {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Toast/Notification for dark mode */
+.dark .toast {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Sidebar for dark mode */
+.dark aside {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.dark aside .group:hover {
+  background: #1e293b;
+}
+
+/* Header for dark mode */
+.dark header {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: #334155;
+}
+
+/* Transition for smooth theme switching */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
 
 /* =================================
    Mobile
-================================= */
+=============================== */
 
 @media (max-width: 640px) {
   html,
@@ -69,6 +195,10 @@ textarea {
 
   body {
     background: #ffffff;
+  }
+
+  .dark body {
+    background: #0f172a;
   }
 
   .mobile-chat {
@@ -83,5 +213,21 @@ textarea {
 
   ::-webkit-scrollbar {
     width: 3px;
+  }
+}
+
+/* Light/Dark mode specific utilities */
+.light {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
   }
 }
