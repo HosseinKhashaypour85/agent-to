@@ -73,7 +73,7 @@ const emptyForm: PlanForm = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm outline-none transition-all focus:border-brand-600 focus:bg-white focus:ring-4 focus:ring-brand-600/10 placeholder:text-slate-400";
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 placeholder:text-slate-400";
 
 export default function Plans() {
   const [items, setItems] = useState<Plan[]>([]);
@@ -106,7 +106,6 @@ export default function Plans() {
     void loadPlans();
   }, [loadPlans]);
 
-  // auto-dismiss success
   useEffect(() => {
     if (!success) return;
     const t = setTimeout(() => setSuccess(""), 3500);
@@ -225,15 +224,14 @@ export default function Plans() {
           <button
             type="button"
             onClick={openCreate}
-            className="group relative h-11 px-5 rounded-xl bg-gradient-to-l from-brand-600 to-brand-500 text-white text-sm font-bold flex gap-2 items-center shadow-lg shadow-brand-600/25 hover:shadow-xl hover:shadow-brand-600/30 hover:-translate-y-0.5 transition-all"
+            className="h-11 px-5 rounded-xl bg-brand-600 text-white text-sm font-bold flex gap-2 items-center shadow-sm hover:bg-brand-700 active:bg-brand-800 transition-colors"
           >
-            <Plus size={18} className="transition-transform group-hover:rotate-90" />
+            <Plus size={18} />
             افزودن پلن
           </button>
         }
       />
 
-      {/* Search + count */}
       {!loading && items.length > 0 && (
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[240px] max-w-md">
@@ -248,16 +246,15 @@ export default function Plans() {
               className={`${inputClass} pr-10`}
             />
           </div>
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-100 rounded-xl px-3.5 py-2.5">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl px-3.5 py-2.5">
             <Filter size={14} />
             {filtered.length} از {items.length} پلن
           </div>
         </div>
       )}
 
-      {/* Success toast */}
       {success && (
-        <div className="mb-4 rounded-2xl border border-emerald-200 bg-gradient-to-l from-emerald-50 to-white p-4 text-sm text-emerald-700 flex items-center gap-3 shadow-sm animate-[slideDown_0.3s_ease]">
+        <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
             <CheckCircle2 size={16} className="text-emerald-600" />
           </div>
@@ -265,16 +262,15 @@ export default function Plans() {
           <button
             type="button"
             onClick={() => setSuccess("")}
-            className="mr-auto text-emerald-500 hover:text-emerald-700"
+            className="mr-auto text-emerald-600 hover:text-emerald-800"
           >
             <X size={16} />
           </button>
         </div>
       )}
 
-      {/* Error */}
       {error && !modalOpen && (
-        <div className="mb-4 rounded-2xl border border-red-200 bg-gradient-to-l from-red-50 to-white p-4 text-sm text-red-700 flex items-center gap-3 shadow-sm">
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
             <AlertCircle size={16} className="text-red-600" />
           </div>
@@ -282,7 +278,7 @@ export default function Plans() {
           <button
             type="button"
             onClick={() => void loadPlans()}
-            className="mr-auto flex items-center gap-1.5 text-red-600 hover:text-red-800 font-bold text-xs"
+            className="mr-auto flex items-center gap-1.5 text-red-700 hover:text-red-900 font-bold text-xs"
           >
             <RefreshCw size={14} />
             تلاش مجدد
@@ -290,7 +286,6 @@ export default function Plans() {
         </div>
       )}
 
-      {/* Loading skeleton */}
       {loading ? (
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
           {[1, 2, 3].map((i) => (
@@ -334,7 +329,6 @@ export default function Plans() {
         </div>
       )}
 
-      {/* Modal */}
       {modalOpen && (
         <PlanModal
           editing={editing}
@@ -349,8 +343,6 @@ export default function Plans() {
     </Shell>
   );
 }
-
-/* ---------------------------- Plan Card ---------------------------- */
 
 function PlanCard({
   plan,
@@ -374,28 +366,23 @@ function PlanCard({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl bg-white border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+      className={`group relative overflow-hidden rounded-2xl bg-white border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
         plan.isPopular
-          ? "border-brand-200 shadow-lg shadow-brand-600/5 ring-1 ring-brand-600/10"
+          ? "border-brand-300 shadow-sm ring-1 ring-brand-500/10"
           : "border-slate-200 shadow-sm hover:shadow-slate-200/60"
       }`}
     >
-      {/* Popular gradient top strip */}
       {plan.isPopular && (
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-amber-400 via-brand-500 to-violet-500" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-amber-400" />
       )}
 
-      {/* Subtle background decoration */}
-      <div className="absolute -left-16 -top-16 w-40 h-40 rounded-full bg-gradient-to-br from-brand-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
       <div className="relative p-6">
-        {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="flex items-center gap-2.5">
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                 plan.isPopular
-                  ? "bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-md shadow-amber-500/25"
+                  ? "bg-amber-100 text-amber-700"
                   : "bg-slate-100 text-slate-500"
               }`}
             >
@@ -427,21 +414,18 @@ function PlanCard({
           </span>
         </div>
 
-        {/* Popular badge */}
         {plan.isPopular && (
-          <div className="mt-3 inline-flex items-center gap-1.5 bg-gradient-to-l from-amber-50 to-amber-100 text-amber-700 text-[11px] font-black px-2.5 py-1 rounded-full border border-amber-200">
+          <div className="mt-3 inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 text-[11px] font-black px-2.5 py-1 rounded-full border border-amber-200">
             <TrendingUp size={12} />
             محبوب‌ترین پلن
           </div>
         )}
 
-        {/* Description */}
         <p className="text-xs text-slate-400 mt-3 min-h-[18px] leading-relaxed line-clamp-2">
           {plan.description || "بدون توضیحات"}
         </p>
 
-        {/* Price */}
-        <div className="mt-5 pb-5 border-b border-dashed border-slate-100">
+        <div className="mt-5 pb-5 border-b border-dashed border-slate-200">
           <div className="flex items-end gap-1.5">
             <b className="text-3xl font-black text-slate-900 tracking-tight">
               {Number(plan.price).toLocaleString()}
@@ -455,7 +439,6 @@ function PlanCard({
           </span>
         </div>
 
-        {/* Features */}
         <div className="mt-5 space-y-2.5">
           {features.map((f) => (
             <div key={f.label} className="flex items-center gap-2.5 text-sm">
@@ -468,12 +451,11 @@ function PlanCard({
           ))}
         </div>
 
-        {/* Actions */}
         <div className="mt-6 grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={onEdit}
-            className="h-10 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:border-brand-600 hover:text-brand-700 hover:bg-brand-50/50 transition-all flex items-center justify-center gap-1.5"
+            className="h-10 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:border-brand-500 hover:text-brand-700 hover:bg-brand-50 transition-colors flex items-center justify-center gap-1.5"
           >
             <Pencil size={14} />
             ویرایش
@@ -482,7 +464,7 @@ function PlanCard({
             type="button"
             onClick={onDelete}
             disabled={deleting}
-            className="h-10 rounded-xl border border-red-100 text-xs font-bold text-red-600 hover:bg-red-50 hover:border-red-200 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5"
+            className="h-10 rounded-xl border border-red-200 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
           >
             {deleting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -497,37 +479,30 @@ function PlanCard({
   );
 }
 
-/* ---------------------------- Empty State ---------------------------- */
-
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="card p-12 md:p-16 text-center relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-brand-50/40 to-transparent pointer-events-none" />
-      <div className="relative">
-        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-brand-100 to-brand-50 flex items-center justify-center mb-5 shadow-inner">
-          <Sparkles size={36} className="text-brand-600" />
-        </div>
-        <h3 className="text-lg font-black text-slate-800 mb-1.5">
-          هنوز پلنی ثبت نشده است
-        </h3>
-        <p className="text-sm text-slate-400 mb-6 max-w-sm mx-auto leading-relaxed">
-          اولین پلن اشتراکی خود را ایجاد کنید و مشتریان را به استفاده از
-          سرویس‌های AGENT-TO دعوت کنید.
-        </p>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-l from-brand-600 to-brand-500 px-6 py-3 text-white text-sm font-bold shadow-lg shadow-brand-600/25 hover:shadow-xl hover:-translate-y-0.5 transition-all"
-        >
-          <Plus size={16} />
-          افزودن اولین پلن
-        </button>
+    <div className="card p-12 md:p-16 text-center">
+      <div className="w-20 h-20 mx-auto rounded-3xl bg-brand-50 flex items-center justify-center mb-5">
+        <Sparkles size={36} className="text-brand-600" />
       </div>
+      <h3 className="text-lg font-black text-slate-800 mb-1.5">
+        هنوز پلنی ثبت نشده است
+      </h3>
+      <p className="text-sm text-slate-400 mb-6 max-w-sm mx-auto leading-relaxed">
+        اولین پلن اشتراکی خود را ایجاد کنید و مشتریان را به استفاده از
+        سرویس‌های AGENT-TO دعوت کنید.
+      </p>
+      <button
+        type="button"
+        onClick={onCreate}
+        className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-white text-sm font-bold shadow-sm hover:bg-brand-700 transition-colors"
+      >
+        <Plus size={16} />
+        افزودن اولین پلن
+      </button>
     </div>
   );
 }
-
-/* ---------------------------- Modal ---------------------------- */
 
 function PlanModal({
   editing,
@@ -548,18 +523,17 @@ function PlanModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm p-4 flex items-center justify-center animate-[fadeIn_0.2s_ease]"
+      className="fixed inset-0 z-50 bg-slate-900/60 p-4 flex items-center justify-center"
       onClick={onClose}
     >
       <form
         onSubmit={onSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]"
+        className="bg-white rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl"
       >
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 py-5 flex items-center justify-between rounded-t-3xl">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-5 flex items-center justify-between rounded-t-3xl">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-600/25">
+            <div className="w-11 h-11 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600">
               {editing ? <Pencil size={18} /> : <Plus size={20} />}
             </div>
             <div>
@@ -591,7 +565,6 @@ function PlanModal({
             </div>
           )}
 
-          {/* Section: Basic Info */}
           <SectionTitle icon={Sparkles} title="اطلاعات پایه" />
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             <Field label="نام پلن" required>
@@ -652,7 +625,6 @@ function PlanModal({
             </div>
           </div>
 
-          {/* Section: Pricing */}
           <SectionTitle icon={TrendingUp} title="قیمت‌گذاری" />
           <div className="grid sm:grid-cols-3 gap-4 mb-6">
             <Field label="قیمت" required>
@@ -691,7 +663,6 @@ function PlanModal({
             </Field>
           </div>
 
-          {/* Section: Limits */}
           <SectionTitle icon={Zap} title="محدودیت‌ها و امکانات" />
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="حداکثر مشتری">
@@ -740,8 +711,7 @@ function PlanModal({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white/90 backdrop-blur-md border-t border-slate-100 px-6 py-4 flex flex-wrap justify-end gap-3 rounded-b-3xl">
+        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex flex-wrap justify-end gap-3 rounded-b-3xl">
           <button
             type="button"
             onClick={onClose}
@@ -753,7 +723,7 @@ function PlanModal({
           <button
             type="submit"
             disabled={saving}
-            className="h-11 px-6 rounded-xl bg-gradient-to-l from-brand-600 to-brand-500 text-white font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-brand-600/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            className="h-11 px-6 rounded-xl bg-brand-600 text-white font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm hover:bg-brand-700 transition-colors"
           >
             {saving ? (
               <Loader2 size={17} className="animate-spin" />
@@ -773,8 +743,6 @@ function PlanModal({
     </div>
   );
 }
-
-/* ---------------------------- Helpers ---------------------------- */
 
 function SectionTitle({
   icon: Icon,
