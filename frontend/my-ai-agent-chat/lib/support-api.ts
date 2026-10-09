@@ -27,7 +27,12 @@ export async function supportRequest<T>(path: string, init: RequestInit = {}): P
     cache: "no-store",
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || data?.success === false) throw new Error(data?.message || `Request failed (${response.status})`);
+  if (!response.ok || data?.success === false) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("agentto:unauthorized"));
+    }
+    throw new Error(data?.message || `Request failed (${response.status})`);
+  }
   return data as T;
 }
 
