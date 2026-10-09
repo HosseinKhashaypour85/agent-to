@@ -4,81 +4,70 @@ import Subscription from "../../models/Subscription";
 import SubscriptionPlan from "../../models/SubscriptionPlan";
 import Tenant from "../../models/Tenant";
 
+type SubscriptionStatus =
+  | "ACTIVE"
+  | "EXPIRED"
+  | "SUSPENDED"
+  | "CANCELLED";
+
+function toValidDate(value: Date | string): Date {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    throw new Error("INVALID_SUBSCRIPTION_DATES");
+  }
+
+  return date;
+}
+
 export async function createSubscription(data: {
   tenantId: string;
   planId: string;
-
-  status?: "ACTIVE" | "EXPIRED" | "SUSPENDED" | "CANCELLED";
-
+  status?: SubscriptionStatus;
   startsAt: Date;
   expiresAt: Date;
 }) {
-  const tenant =
-    await Tenant.findByPk(
-      data.tenantId
-    );
+  const tenant = await Tenant.findByPk(data.tenantId);
 
   if (!tenant) {
-    throw new Error(
-      "TENANT_NOT_FOUND"
-    );
+    throw new Error("TENANT_NOT_FOUND");
   }
 
-  const plan =
-    await SubscriptionPlan.findByPk(
-      data.planId
-    );
+  const plan = await SubscriptionPlan.findByPk(data.planId);
 
   if (!plan) {
-    throw new Error(
-      "PLAN_NOT_FOUND"
-    );
+    throw new Error("PLAN_NOT_FOUND");
   }
 
-  if (
-    new Date(data.expiresAt).getTime() <=
-    new Date(data.startsAt).getTime()
-  ) {
-    throw new Error(
-      "INVALID_SUBSCRIPTION_DATES"
-    );
+  const startsAt = toValidDate(data.startsAt);
+  const expiresAt = toValidDate(data.expiresAt);
+
+  if (expiresAt.getTime() <= startsAt.getTime()) {
+    throw new Error("INVALID_SUBSCRIPTION_DATES");
   }
 
-  const subscription =
-    await Subscription.create({
-      id: randomUUID(),
+  const subscription = await Subscription.create({
+    id: randomUUID(),
+    tenantId: data.tenantId,
+    planId: data.planId,
+    status: data.status || "ACTIVE",
+    startsAt,
+    expiresAt,
+    startedAt: startsAt,
+  });
 
-      tenantId:
-        data.tenantId,
-
-      planId:
-        data.planId,
-
-      status:
-        data.status || "ACTIVE",
-
-      startsAt:
-        data.startsAt,
-
-      expiresAt:
-        data.expiresAt,
-    });
-
-  return Subscription.findByPk(
-    subscription.id,
-    {
-      include: [
-        {
-          model: SubscriptionPlan,
-          as: "plan",
-        },
-        {
-          model: Tenant,
-          as: "tenant",
-        },
-      ],
-    }
-  );
+  return Subscription.findByPk(subscription.id, {
+    include: [
+      {
+        model: SubscriptionPlan,
+        as: "plan",
+      },
+      {
+        model: Tenant,
+        as: "tenant",
+      },
+    ],
+  });
 }
 
 export async function getSubscriptions() {
@@ -93,37 +82,26 @@ export async function getSubscriptions() {
         as: "tenant",
       },
     ],
-
-    order: [
-      ["createdAt", "DESC"],
-    ],
+    order: [["createdAt", "DESC"]],
   });
 }
 
-export async function getSubscriptionById(
-  id: string
-) {
-  const subscription =
-    await Subscription.findByPk(
-      id,
+export async function getSubscriptionById(id: string) {
+  const subscription = await Subscription.findByPk(id, {
+    include: [
       {
-        include: [
-          {
-            model: SubscriptionPlan,
-            as: "plan",
-          },
-          {
-            model: Tenant,
-            as: "tenant",
-          },
-        ],
-      }
-    );
+        model: SubscriptionPlan,
+        as: "plan",
+      },
+      {
+        model: Tenant,
+        as: "tenant",
+      },
+    ],
+  });
 
   if (!subscription) {
-    throw new Error(
-      "SUBSCRIPTION_NOT_FOUND"
-    );
+    throw new Error("SUBSCRIPTION_NOT_FOUND");
   }
 
   return subscription;
@@ -133,95 +111,64 @@ export async function updateSubscription(
   id: string,
   data: Partial<{
     planId: string;
-
-    status:
-      | "ACTIVE"
-      | "EXPIRED"
-      | "SUSPENDED"
-      | "CANCELLED";
-
-    startsAt: Date;
-
-    expiresAt: Date;
-
-    cancelledAt: Date | null;
+    status: SubscriptionStatus;
+    startsAt: Date | string;
+    expiresAt: Date | string;
+    cancelledAt: Date | string | null;
   }>
 ) {
-  const subscription =
-    await Subscription.findByPk(
-      id
-    );
+  const subscription = await Subscription.findByPk(id);
 
   if (!subscription) {
-    throw new Error(
-      "SUBSCRIPTION_NOT_FOUND"
-    );
+    throw new Error("SUBSCRIPTION_NOT_FOUND");
   }
 
-  if (data.planId) {
-    const plan =
-      await SubscriptionPlan.findByPk(
-        data.planId
-      );
+  if (data.planId !== undefined) {
+    const plan = await SubscriptionPlan.findByPk(data.planId);
 
     if (!plan) {
-      throw new Error(
-        "PLAN_NOT_FOUND"
-      );
+      throw new Error("PLAN_NOT_FOUND");
     }
 
-    subscription.planId =
-      plan.id;
+    subscription.planId = plan.id;
   }
 
-  if (data.status) {
-    subscription.status =
-      data.status;
+  if (data.status !== undefined) {
+    subscription.status = data.status;
   }
 
-  if (data.startsAt) {
-    subscription.startsAt =
-      data.startsAt;
+  if (data.startsAt !== undefined) {
+    subscription.startsAt = toValidDate(data.startsAt);
   }
 
-  if (data.expiresAt) {
-    subscription.expiresAt =
-      data.expiresAt;
+  if (data.expiresAt !== undefined) {
+    subscription.expiresAt = toValidDate(data.expiresAt);
   }
 
   if (data.cancelledAt !== undefined) {
     subscription.cancelledAt =
-      data.cancelledAt;
+      data.cancelledAt === null
+        ? null
+        : toValidDate(data.cancelledAt);
   }
 
   if (
     subscription.expiresAt.getTime() <=
     subscription.startsAt.getTime()
   ) {
-    throw new Error(
-      "INVALID_SUBSCRIPTION_DATES"
-    );
+    throw new Error("INVALID_SUBSCRIPTION_DATES");
   }
 
   await subscription.save();
 
-  return getSubscriptionById(
-    subscription.id
-  );
+  return getSubscriptionById(subscription.id);
 }
 
-export async function deleteSubscription(
-  id: string
-) {
-  const subscription =
-    await Subscription.findByPk(
-      id
-    );
+export async function deleteSubscription(id: string) {
+  const subscription = await Subscription.findByPk(id);
 
   if (!subscription) {
-    throw new Error(
-      "SUBSCRIPTION_NOT_FOUND"
-    );
+    throw new Error("SUBSCRIPTION_NOT_FOUND");
   }
 
   await subscription.destroy();
