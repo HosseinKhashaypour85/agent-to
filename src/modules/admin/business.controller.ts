@@ -14,12 +14,13 @@ export async function createBusinessController(
   res: Response
 ) {
   try {
-    const business = await createBusiness(req.body || {});
+    const result = await createBusiness(req.body || {});
 
     return res.status(201).json({
       success: true,
       message: "Business created successfully",
-      data: business,
+      data: result.business,
+      owner: result.owner,
     });
   } catch (error: any) {
     console.error("CREATE BUSINESS ERROR:", error);
@@ -49,6 +50,15 @@ export async function createBusinessController(
           message: "Business slug already exists",
         });
 
+      case "OWNER_EMAIL_INVALID":
+        return res.status(400).json({ success: false, message: "A valid owner login email is required" });
+
+      case "OWNER_PASSWORD_TOO_SHORT":
+        return res.status(400).json({ success: false, message: "Owner password must be at least 8 characters" });
+
+      case "OWNER_EMAIL_ALREADY_EXISTS":
+        return res.status(409).json({ success: false, message: "Owner login email already exists" });
+
       case "BUSINESS_EMAIL_ALREADY_EXISTS":
         return res.status(409).json({
           success: false,
@@ -56,6 +66,9 @@ export async function createBusinessController(
         });
 
       default:
+        if ((error as any)?.name === "SequelizeUniqueConstraintError") {
+          return res.status(409).json({ success: false, message: "Business or owner email already exists" });
+        }
         return res.status(500).json({
           success: false,
           message: "Failed to create business",

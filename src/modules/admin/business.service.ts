@@ -1,5 +1,9 @@
 import { randomUUID } from "crypto";
+import bcrypt from "bcrypt";
+import { Transaction } from "sequelize";
+import { sequelize } from "../../config/database";
 import Tenant from "../../models/Tenant";
+import User from "../../models/User";
 
 interface CreateBusinessInput {
   name: string;
@@ -7,6 +11,10 @@ interface CreateBusinessInput {
   email: string;
   phone?: string | null;
   status?: "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
+  ownerEmail: string;
+  ownerPassword: string;
+  ownerFirstName?: string;
+  ownerLastName?: string;
 }
 
 interface UpdateBusinessInput {
@@ -68,32 +76,56 @@ export async function createBusiness(input: CreateBusinessInput) {
   const slug = normalizeSlug(input.slug || "");
   const email = input.email?.trim().toLowerCase();
   const phone = input.phone?.trim() || null;
+  const ownerEmail = input.ownerEmail?.trim().toLowerCase();
+  const ownerPassword = input.ownerPassword || "";
 
-  if (!name) {
-    throw new Error("BUSINESS_NAME_REQUIRED");
-  }
-
-  if (!slug) {
-    throw new Error("BUSINESS_SLUG_REQUIRED");
-  }
-
-  if (!email) {
-    throw new Error("BUSINESS_EMAIL_REQUIRED");
-  }
+  if (!name) throw new Error("BUSINESS_NAME_REQUIRED");
+  if (!slug) throw new Error("BUSINESS_SLUG_REQUIRED");
+  if (!email) throw new Error("BUSINESS_EMAIL_REQUIRED");
+  if (!ownerEmail || !/^\\S+@\\S+\\.\\S+$/.test(ownerEmail)) throw new Error("OWNER_EMAIL_INVALID");
+  if (ownerPassword.length < 8) throw new Error("OWNER_PASSWORD_TOO_SHORT");
 
   await ensureUniqueSlug(slug);
   await ensureUniqueEmail(email);
+  if (await User.findOne({ where: { email: ownerEmail } })) {
+    throw new Error("OWNER_EMAIL_ALREADY_EXISTS");
+  }
 
-  const business = await Tenant.create({
-    id: randomUUID(),
-    name,
-    slug,
-    email,
-    phone,
-    status: input.status || "ACTIVE",
-  });
+  const transaction = await sequelize.transaction();
+  try {
+    const business = await Tenant.create({
+      id: randomUUID(), name, slug, email, phone,
+      status: input.status || "ACTIVE",
+    }, { transaction });
 
-  return business;
+    const passwordHash = await bcrypt.hash(ownerPassword, 12);
+    const owner = await User.create({
+      tenantId: business.id,
+      email: ownerEmail,
+      password: passwordHash,
+      firstName: input.ownerFirstName?.trim() || null,
+      lastName: input.ownerLastName?.trim() || null,
+      role: "ADMIN",
+      isEmailVerified: false,
+      lastLogin: null,
+    }, { transaction });
+
+    await transaction.commit();
+    return {
+      business,
+      owner: {
+        id: owner.id,
+        tenantId: owner.tenantId,
+        email: owner.email,
+        firstName: owner.firstName,
+        lastName: owner.lastName,
+        role: owner.role,
+      },
+    };
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 }
 
 export async function getBusinesses() {
