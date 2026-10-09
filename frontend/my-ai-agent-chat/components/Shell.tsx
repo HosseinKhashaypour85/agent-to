@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   LayoutDashboard,
   Building2,
@@ -21,6 +23,10 @@ import {
   Menu,
   X,
   Sparkles,
+  Sun,
+  Moon,
+  Monitor,
+  Globe,
 } from "lucide-react";
 
 /* ============ Nav groups ============ */
@@ -63,12 +69,26 @@ const groups = [
 export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case "light":
+        return Sun;
+      case "dark":
+        return Moon;
+      default:
+        return Monitor;
+    }
+  };
+  const CurrentThemeIcon = getThemeIcon();
 
   return (
-    <div className="min-h-screen bg-[#F7F9F8]">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* ==================== Sidebar ==================== */}
       <aside
-        className={`fixed inset-y-0 right-0 z-50 flex w-[280px] flex-col border-l bg-white transition-transform duration-300 ease-out ${
+        className={`fixed inset-y-0 right-0 z-50 flex w-[280px] flex-col border-l bg-white dark:bg-slate-900 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "translate-x-full lg:translate-x-0"
         }`}
         style={{ borderColor: "var(--line)" }}
@@ -85,14 +105,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-[15px] font-black tracking-tight text-[#0B2B29]">
+                <span className="text-[15px] font-black tracking-tight text-[#0B2B29] dark:text-white">
                   AGENT-TO
                 </span>
                 <span className="rounded-md bg-[#10706B]/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-[#10706B]">
                   v2
                 </span>
               </div>
-              <div className="mt-0.5 text-[10px] font-semibold tracking-wider text-[#9AA5A3]">
+              <div className="mt-0.5 text-[10px] font-semibold tracking-wider text-[#9AA5A3] dark:text-slate-400">
                 Super Admin Panel
               </div>
             </div>
@@ -112,10 +132,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {groups.map((group, gi) => (
             <div key={group.label} className={gi !== 0 ? "mt-5" : ""}>
               <div className="mb-2 flex items-center gap-2 px-3">
-                <span className="text-[9px] font-black tracking-[.2em] text-[#9AA5A3]">
+                <span className="text-[9px] font-black tracking-[.2em] text-[#9AA5A3] dark:text-slate-400">
                   {group.label}
                 </span>
-                <span className="h-px flex-1 bg-gradient-to-l from-[#EEF1F0] to-transparent" />
+                <span className="h-px flex-1 bg-gradient-to-l from-[#EEF1F0] dark:from-slate-700 to-transparent" />
               </div>
 
               <div className="space-y-0.5">
@@ -168,22 +188,22 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
         {/* ===== User Card ===== */}
         <div className="border-t p-3" style={{ borderColor: "var(--line)" }}>
-          <button className="group flex w-full items-center gap-3 rounded-xl border border-[#EEF1F0] bg-gradient-to-br from-white to-[#F7FBFA] p-2.5 text-right transition-all hover:border-[#10706B]/20 hover:shadow-[0_4px_14px_-8px_rgba(16,112,107,0.5)]">
+          <button className="group flex w-full items-center gap-3 rounded-xl border border-[#EEF1F0] dark:border-slate-700 bg-gradient-to-br from-white dark:from-slate-800 to-[#F7FBFA] dark:to-slate-900 p-2.5 text-right transition-all hover:border-[#10706B]/20 hover:shadow-[0_4px_14px_-8px_rgba(16,112,107,0.5)]">
             <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#0B5B57] to-[#071F1E] text-xs font-black text-white">
               HK
               <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-[#4ADE80] ring-2 ring-white" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-xs font-black text-[#0B2B29]">
+              <span className="block truncate text-xs font-black text-[#0B2B29] dark:text-white">
                 Super Admin
               </span>
-              <span className="block truncate text-[10px] font-medium text-[#9AA5A3]">
+              <span className="block truncate text-[10px] font-medium text-[#9AA5A3] dark:text-slate-400">
                 مدیریت پلتفرم
               </span>
             </span>
             <ChevronDown
               size={14}
-              className="text-[#9AA5A3] transition-transform duration-200 group-hover:translate-y-0.5"
+              className="text-[#9AA5A3] dark:text-slate-400 transition-transform duration-200 group-hover:translate-y-0.5"
             />
           </button>
         </div>
@@ -200,7 +220,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       {/* ==================== Main ==================== */}
       <div className="lg:mr-[280px]">
         {/* ==================== Header ==================== */}
-        <header className="sticky top-0 z-40 border-b border-transparent bg-white/70 backdrop-blur-2xl">
+        <header className="sticky top-0 z-40 border-b border-transparent bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl">
           {/* Soft glow */}
           <div
             aria-hidden
@@ -237,21 +257,46 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
             {/* Right cluster */}
             <div className="mr-auto flex items-center gap-2">
-              <div
-                className="hidden items-center gap-1.5 rounded-full border bg-white/80 px-3 py-1.5 text-[11px] font-bold text-[#248357] shadow-sm xl:flex"
+              {/* Theme Toggle */}
+              <button
+                onClick={() => {
+                  const themes = ["light", "dark", "system"] as const;
+                  const currentIndex = themes.indexOf(theme);
+                  setTheme(themes[(currentIndex + 1) % 3]);
+                }}
+                className="group relative grid h-10 w-10 place-items-center rounded-xl border bg-white/80 dark:bg-slate-800/80 text-[#4A5755] dark:text-slate-300 transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-[#E8F5F3] dark:hover:bg-slate-700 hover:text-[#0B5B57] hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
                 style={{ borderColor: "var(--line)" }}
+                aria-label={`تم فعلی: ${theme === "light" ? "روشن" : theme === "dark" ? "تیره" : "سیستمی"}`}
               >
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4ADE80] opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22C55E]" />
+                <CurrentThemeIcon size={18} className="transition-transform group-hover:rotate-90" />
+                <span className="absolute right-2 top-2 flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10706B] opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#10706B] ring-2 ring-white" />
                 </span>
-                All systems operational
-              </div>
+              </button>
+
+              {/* Language Toggle */}
+              <button
+                onClick={() => {
+                  const langs = ["fa", "en", "ar"] as const;
+                  const currentIndex = langs.indexOf(language);
+                  setLanguage(langs[(currentIndex + 1) % 3]);
+                }}
+                className="group relative grid h-10 w-10 place-items-center rounded-xl border bg-white/80 dark:bg-slate-800/80 text-[#4A5755] dark:text-slate-300 transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-[#E8F5F3] dark:hover:bg-slate-700 hover:text-[#0B5B57] hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
+                style={{ borderColor: "var(--line)" }}
+                aria-label={`زبان فعلی: ${language === "fa" ? "فارسی" : language === "en" ? "English" : "العربية"}`}
+              >
+                <Globe size={18} className="transition-transform group-hover:rotate-12" />
+                <span className="absolute right-2 top-2 flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10706B] opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#10706B] ring-2 ring-white" />
+                </span>
+              </button>
 
               <div className="mx-1 hidden h-6 w-px bg-[var(--line)] xl:block" />
 
               <button
-                className="group relative grid h-10 w-10 place-items-center rounded-xl border bg-white/80 text-[#4A5755] transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-[#E8F5F3] hover:text-[#0B5B57] hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
+                className="group relative grid h-10 w-10 place-items-center rounded-xl border bg-white/80 dark:bg-slate-800/80 text-[#4A5755] dark:text-slate-300 transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-[#E8F5F3] dark:hover:bg-slate-700 hover:text-[#0B5B57] hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
                 style={{ borderColor: "var(--line)" }}
                 aria-label="اعلان‌ها"
               >
@@ -266,7 +311,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               </button>
 
               <button
-                className="group flex items-center gap-2.5 rounded-2xl border bg-white/80 py-1.5 pr-1.5 pl-2.5 transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-[#E8F5F3] hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
+                className="group flex items-center gap-2.5 rounded-2xl border bg-white/80 dark:bg-slate-800/80 py-1.5 pr-1.5 pl-2.5 transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-[#E8F5F3] dark:hover:bg-slate-700 hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
                 style={{ borderColor: "var(--line)" }}
               >
                 <span className="relative grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#0B5B57] to-[#071F1E] text-xs font-black text-white shadow-[0_4px_12px_-4px_rgba(7,31,30,0.6)]">
