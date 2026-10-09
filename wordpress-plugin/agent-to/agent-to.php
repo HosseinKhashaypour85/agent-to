@@ -148,7 +148,7 @@ final class Agent_To_WordPress_Plugin {
             'siteId' => $s['site_id'],
             'visitorId' => $visitor_id,
             'message' => $message,
-            'channel' => 'website',
+            'channel' => 'WEBSITE',
         );
         $response = wp_remote_post($s['api_url'] . '/chat', array(
             'timeout' => 45,
