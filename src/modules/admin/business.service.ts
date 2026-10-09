@@ -82,7 +82,7 @@ export async function createBusiness(input: CreateBusinessInput) {
   if (!name) throw new Error("BUSINESS_NAME_REQUIRED");
   if (!slug) throw new Error("BUSINESS_SLUG_REQUIRED");
   if (!email) throw new Error("BUSINESS_EMAIL_REQUIRED");
-  if (!ownerEmail || !/^\\S+@\\S+\\.\\S+$/.test(ownerEmail)) throw new Error("OWNER_EMAIL_INVALID");
+  if (!ownerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) throw new Error("OWNER_EMAIL_INVALID");
   if (ownerPassword.length < 8) throw new Error("OWNER_PASSWORD_TOO_SHORT");
 
   await ensureUniqueSlug(slug);
