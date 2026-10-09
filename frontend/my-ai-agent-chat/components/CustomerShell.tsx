@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Bot, Radio, Package, Database, Sparkles,
   MessagesSquare, Users, UserRoundSearch, CreditCard, LifeBuoy,
-  Settings, Bell, Menu, X, Search, ChevronLeft, Zap
+  Settings, Bell, Menu, X, Search, ChevronLeft, Zap, LogOut
 } from "lucide-react";
+import { clearCustomerSession } from "@/lib/api";
 
+type SessionUser = { firstName?: string; lastName?: string; email?: string; role?: string };
 const nav = [
   { title: "نمای کلی", items: [
     { label: "داشبورد", href: "/customer-dashboard", icon: LayoutDashboard },
@@ -35,7 +37,38 @@ const nav = [
 
 export default function CustomerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
+    const token = window.sessionStorage.getItem("agentto_token");
+    if (!token) {
+      router.replace("/customer-login");
+      return;
+    }
+    try {
+      const saved = window.sessionStorage.getItem("agentto_user");
+      if (saved) setUser(JSON.parse(saved) as SessionUser);
+    } catch {
+      window.sessionStorage.removeItem("agentto_user");
+    }
+    const onUnauthorized = () => {
+      clearCustomerSession();
+      router.replace("/customer-login");
+    };
+    window.addEventListener("agentto:unauthorized", onUnauthorized);
+    return () => window.removeEventListener("agentto:unauthorized", onUnauthorized);
+  }, [router]);
+
+  function logout() {
+    clearCustomerSession();
+    router.replace("/customer-login");
+  }
+
+  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "حساب مشتری";
+  const avatar = displayName.trim().charAt(0) || "م";
+
   return (
     <div dir="rtl" className="min-h-screen bg-[#F6F8F7] text-[#173331]">
       {mobileOpen && <button aria-label="بستن منو" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-[#092F2C]/35 lg:hidden" />}
@@ -48,11 +81,11 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
           <button className="lg:hidden" onClick={() => setMobileOpen(false)} aria-label="بستن"><X size={19}/></button>
         </div>
         <div className="border-b border-[#E9EFED] px-4 py-4">
-          <button className="flex w-full items-center gap-3 rounded-xl border border-[#E6ECEA] bg-[#FAFCFB] p-3 text-right">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#DFF1ED] text-sm font-bold text-[#10706B]">ک</span>
-            <span className="min-w-0 flex-1"><b className="block truncate text-sm">کسب‌وکار من</b><small className="text-xs text-[#81908E]">پلن Pro</small></span>
+          <Link href="/customer-settings" className="flex w-full items-center gap-3 rounded-xl border border-[#E6ECEA] bg-[#FAFCFB] p-3 text-right">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#DFF1ED] text-sm font-bold text-[#10706B]">{avatar}</span>
+            <span className="min-w-0 flex-1"><b className="block truncate text-sm">{displayName}</b><small className="text-xs text-[#81908E]">{user?.email || "حساب مشتری"}</small></span>
             <ChevronLeft size={16} className="text-[#899794]"/>
-          </button>
+          </Link>
         </div>
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-5">
           {nav.map(group => <section key={group.title}>
@@ -67,9 +100,8 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
           </section>)}
         </nav>
         <div className="m-4 rounded-2xl bg-[#F0F8F6] p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-bold"><Zap size={16} className="text-[#10706B]"/>اعتبار هوش مصنوعی</div>
-          <div className="mb-2 flex items-center justify-between text-xs"><span className="text-[#72817E]">مصرف این ماه</span><b>۶۸٪</b></div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-[#DCEAE6]"><div className="h-full w-[68%] rounded-full bg-[#10706B]"/></div>
+          <div className="mb-2 flex items-center gap-2 text-sm font-bold"><Zap size={16} className="text-[#10706B]"/>مصرف هوش مصنوعی</div>
+          <p className="text-xs leading-6 text-[#72817E]">گزارش مصرف ثبت‌شده را در بخش حساب کاربری ببین.</p>
           <Link href="/customer-usage" className="mt-3 block text-xs font-bold text-[#10706B]">مشاهده جزئیات ←</Link>
         </div>
       </aside>
@@ -77,12 +109,13 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
         <header className="sticky top-0 z-30 flex h-[76px] items-center justify-between border-b border-[#E4EBE8] bg-white/90 px-4 backdrop-blur-xl sm:px-7">
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileOpen(true)} className="rounded-lg p-2 hover:bg-[#F2F6F5] lg:hidden" aria-label="باز کردن منو"><Menu size={21}/></button>
-            <div className="hidden items-center gap-2 rounded-xl border border-[#E6ECEA] bg-[#FAFCFB] px-3 py-2 text-sm text-[#899794] sm:flex"><Search size={16}/><span>جست‌وجو در پنل...</span><kbd className="mr-8 rounded border border-[#E4EAE8] px-1.5 py-0.5 text-[10px]">⌘ K</kbd></div>
+            <div className="hidden items-center gap-2 rounded-xl border border-[#E6ECEA] bg-[#FAFCFB] px-3 py-2 text-sm text-[#899794] sm:flex"><Search size={16}/><span>پنل کسب‌وکار</span></div>
           </div>
           <div className="flex items-center gap-3">
-            <button aria-label="اعلان‌ها" className="relative rounded-xl border border-[#E6ECEA] p-2.5 text-[#61716E] hover:bg-[#F7FAF9]"><Bell size={18}/><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#10706B]"/></button>
+            <Link href="/customer-support" aria-label="پشتیبانی" className="relative rounded-xl border border-[#E6ECEA] p-2.5 text-[#61716E] hover:bg-[#F7FAF9]"><Bell size={18}/></Link>
             <div className="h-8 w-px bg-[#E6ECEA]"/>
-            <button className="flex items-center gap-2"><span className="hidden text-right sm:block"><b className="block text-xs">مدیر کسب‌وکار</b><small className="text-[10px] text-[#81908E]">حساب مشتری</small></span><span className="grid h-9 w-9 place-items-center rounded-full bg-[#DFF1ED] text-sm font-bold text-[#10706B]">م</span></button>
+            <span className="hidden max-w-48 truncate text-xs text-[#81908E] sm:block">{user?.email || "حساب مشتری"}</span>
+            <button onClick={logout} className="inline-flex items-center gap-2 rounded-xl border border-[#E6ECEA] px-3 py-2 text-xs font-bold text-[#61716E] hover:bg-[#F7FAF9]"><LogOut size={15}/>خروج</button>
           </div>
         </header>
         <main className="mx-auto w-full max-w-[1500px] p-4 sm:p-7 lg:p-9">{children}</main>

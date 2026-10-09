@@ -7,10 +7,11 @@ const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "https://agent-to.darkube.i
 
 function getToken() {
   if (typeof window === "undefined") return "";
-  // Uses the usual token keys without requiring a specific auth implementation.
+  const sessionToken = window.sessionStorage.getItem("agentto_token");
+  if (sessionToken) return sessionToken.replace(/^Bearer\\s+/i, "");
   for (const key of ["token", "accessToken", "authToken", "access_token", "jwt"]) {
     const value = window.localStorage.getItem(key);
-    if (value) return value.replace(/^Bearer\s+/i, "");
+    if (value) return value.replace(/^Bearer\\s+/i, "");
   }
   return "";
 }
@@ -27,7 +28,12 @@ export async function supportRequest<T>(path: string, init: RequestInit = {}): P
     cache: "no-store",
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || data?.success === false) throw new Error(data?.message || `Request failed (${response.status})`);
+  if (!response.ok || data?.success === false) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("agentto:unauthorized"));
+    }
+    throw new Error(data?.message || `Request failed (${response.status})`);
+  }
   return data as T;
 }
 
