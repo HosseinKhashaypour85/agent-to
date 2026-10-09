@@ -99,7 +99,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
 
           <button
-            className="grid h-8 w-8 place-items-center rounded-lg text-[#9AA5A3] transition-all hover:bg-[#F2F6F5] hover:text-[#0B5B57] lg:hidden"
+            className="grid h-8 w-8 place-items-center rounded-lg text-[#9AA5A3] transition-all hover:bg-[#E8F5F3] hover:text-[#0B5B57] lg:hidden"
             onClick={() => setOpen(false)}
             aria-label="بستن منو"
           >
@@ -142,8 +142,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                       <span
                         className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-all duration-200 ${
                           active
-                            ? "bg-white text-[#10706B] shadow-[0_2px_6px_-2px_rgba(16,112,107,0.35)]"
-                            : "bg-[#F2F6F5] text-[#7A8785] group-hover:bg-white group-hover:text-[#10706B] group-hover:shadow-[0_2px_6px_-2px_rgba(16,112,107,0.25)]"
+                            ? "bg-[#E8F5F3] text-[#10706B] shadow-[0_2px_6px_-2px_rgba(16,112,107,0.35)]"
+                            : "bg-[#F2F6F5] text-[#7A8785] group-hover:bg-[#E8F5F3] group-hover:text-[#10706B] group-hover:shadow-[0_2px_6px_-2px_rgba(16,112,107,0.25)]"
                         }`}
                       >
                         <Icon
@@ -209,7 +209,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="relative flex h-[72px] items-center gap-3 px-5 lg:px-8">
             <button
-              className="grid h-10 w-10 place-items-center rounded-xl border border-transparent text-[#4A5755] transition-all hover:border-[var(--line)] hover:bg-white hover:text-[#0B5B57] lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-transparent text-[#4A5755] transition-all hover:border-[var(--line)] hover:bg-[#E8F5F3] hover:text-[#0B5B57] lg:hidden"
               onClick={() => setOpen(true)}
               aria-label="باز کردن منو"
             >
@@ -251,7 +251,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               <div className="mx-1 hidden h-6 w-px bg-[var(--line)] xl:block" />
 
               <button
-                className="group relative grid h-10 w-10 place-items-center rounded-xl border bg-white/80 text-[#4A5755] transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-white hover:text-[#0B5B57] hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
+                className="group relative grid h-10 w-10 place-items-center rounded-xl border bg-white/80 text-[#4A5755] transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-[#E8F5F3] hover:text-[#0B5B57] hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
                 style={{ borderColor: "var(--line)" }}
                 aria-label="اعلان‌ها"
               >
@@ -266,7 +266,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               </button>
 
               <button
-                className="group flex items-center gap-2.5 rounded-2xl border bg-white/80 py-1.5 pr-1.5 pl-2.5 transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-white hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
+                className="group flex items-center gap-2.5 rounded-2xl border bg-white/80 py-1.5 pr-1.5 pl-2.5 transition-all hover:-translate-y-0.5 hover:border-[#10706B]/30 hover:bg-[#E8F5F3] hover:shadow-[0_8px_20px_-10px_rgba(16,112,107,0.5)]"
                 style={{ borderColor: "var(--line)" }}
               >
                 <span className="relative grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#0B5B57] to-[#071F1E] text-xs font-black text-white shadow-[0_4px_12px_-4px_rgba(7,31,30,0.6)]">

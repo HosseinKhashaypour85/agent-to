@@ -605,7 +605,7 @@ export default function BusinessDetails({
                   onClick={() =>
                     changeStatus("ACTIVE")
                   }
-                  className="w-full rounded-xl px-3 py-2.5 text-right text-xs font-bold hover:bg-[#F4F8F7]"
+                  className="w-full rounded-xl px-3 py-2.5 text-right text-xs font-bold hover:bg-[#E8F5F3] hover:text-[#10706B]"
                 >
                   فعال کردن
                 </button>
@@ -615,7 +615,7 @@ export default function BusinessDetails({
                   onClick={() =>
                     changeStatus("SUSPENDED")
                   }
-                  className="w-full rounded-xl px-3 py-2.5 text-right text-xs font-bold hover:bg-[#F4F8F7]"
+                  className="w-full rounded-xl px-3 py-2.5 text-right text-xs font-bold hover:bg-[#E8F5F3] hover:text-[#10706B]"
                 >
                   معلق کردن
                 </button>
@@ -625,7 +625,7 @@ export default function BusinessDetails({
                   onClick={() =>
                     changeStatus("DEACTIVATED")
                   }
-                  className="w-full rounded-xl px-3 py-2.5 text-right text-xs font-bold hover:bg-[#F4F8F7]"
+                  className="w-full rounded-xl px-3 py-2.5 text-right text-xs font-bold hover:bg-[#E8F5F3] hover:text-[#10706B]"
                 >
                   غیرفعال کردن
                 </button>

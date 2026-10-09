@@ -455,7 +455,7 @@ function PlanCard({
           <button
             type="button"
             onClick={onEdit}
-            className="h-10 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:border-brand-500 hover:text-brand-700 hover:bg-brand-50 transition-colors flex items-center justify-center gap-1.5"
+            className="h-10 rounded-xl border border-[#DDEFEA] bg-[#E8F5F3] text-xs font-bold text-[#10706B] hover:bg-[#DDEFEA] transition-colors flex items-center justify-center gap-1.5"
           >
             <Pencil size={14} />
             ویرایش
@@ -550,7 +550,7 @@ function PlanModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+            className="w-10 h-10 rounded-xl hover:bg-[#E8F5F3] flex items-center justify-center text-[#10706B] hover:text-[#10706B] transition-colors"
             aria-label="بستن"
           >
             <X size={20} />
@@ -610,7 +610,7 @@ function PlanModal({
                 </select>
               </Field>
 
-              <label className="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer select-none bg-slate-50 rounded-xl p-3.5 hover:bg-slate-100 transition-colors">
+              <label className="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer select-none bg-[#E8F5F3] rounded-xl p-3.5 hover:bg-[#DDEFEA] transition-colors">
                 <input
                   type="checkbox"
                   checked={form.isPopular}
@@ -715,7 +715,7 @@ function PlanModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-11 px-5 rounded-xl border border-slate-200 font-bold text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+            className="h-11 px-5 rounded-xl border border-[#DDEFEA] bg-[#E8F5F3] font-bold text-sm text-[#10706B] hover:bg-[#DDEFEA] transition-colors"
           >
             انصراف
           </button>

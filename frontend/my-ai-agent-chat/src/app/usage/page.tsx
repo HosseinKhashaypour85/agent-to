@@ -204,7 +204,7 @@ export default function UsagePage() {
             <button
               key={key}
               onClick={() => setRange(key)}
-              className={`rounded-xl px-3.5 py-2 text-sm font-bold transition ${range === key ? "bg-brand-600 text-white shadow-sm" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
+              className={`rounded-xl px-3.5 py-2 text-sm font-bold transition ${range === key ? "bg-[#10706B] text-white shadow-sm" : "bg-[#E8F5F3] text-[#10706B] hover:bg-[#DDEFEA]"}`}
             >
               {label}
             </button>
@@ -223,7 +223,7 @@ export default function UsagePage() {
               </label>
             </>
           )}
-          <button onClick={() => void loadReport()} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+          <button onClick={() => void loadReport()} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-[#DDEFEA] bg-[#E8F5F3] px-3.5 py-2 text-sm font-bold text-[#10706B] hover:bg-[#DDEFEA] disabled:opacity-50">
             {loading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
             بروزرسانی
           </button>

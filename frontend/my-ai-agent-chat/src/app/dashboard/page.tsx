@@ -369,7 +369,7 @@ export default function Dashboard() {
                 $ کل
               </span>
               <button
-                className="rounded-xl border bg-white px-3 py-1.5 text-[11px] font-bold text-[#0B5B57] transition-all hover:border-[#10706B]/30 hover:bg-[#F2F9F8]"
+                className="rounded-xl border bg-[#E8F5F3] px-3 py-1.5 text-[11px] font-bold text-[#0B5B57] transition-all hover:border-[#10706B]/30 hover:bg-[#DDEFEA]"
                 style={{ borderColor: "var(--line)" }}
               >
                 ۱۲ ماه اخیر

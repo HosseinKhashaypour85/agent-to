@@ -443,7 +443,7 @@ export default function Subscriptions() {
           <button
             onClick={() => void loadData()}
             disabled={loading}
-            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-bold hover:bg-slate-50 disabled:opacity-50"
+            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[#DDEFEA] bg-[#E8F5F3] px-4 text-sm font-bold text-[#10706B] hover:bg-[#DDEFEA] disabled:opacity-50"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             بروزرسانی
@@ -607,7 +607,7 @@ export default function Subscriptions() {
               <button
                 onClick={() => setModalOpen(false)}
                 disabled={saving}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#10706B] hover:bg-[#E8F5F3] hover:text-[#10706B]"
                 aria-label="بستن"
               >
                 <X size={20} />
@@ -731,7 +731,7 @@ export default function Subscriptions() {
                   type="button"
                   onClick={() => setModalOpen(false)}
                   disabled={saving}
-                  className="h-11 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                  className="h-11 rounded-xl border border-[#DDEFEA] bg-[#E8F5F3] px-5 text-sm font-bold text-[#10706B] hover:bg-[#DDEFEA] disabled:opacity-50"
                 >
                   انصراف
                 </button>
