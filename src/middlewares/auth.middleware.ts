@@ -16,20 +16,22 @@ export function authMiddleware(
   next: NextFunction
 ) {
   try {
-    // اول JWT را از HttpOnly Cookie می‌خوانیم
-    let token = req.cookies?.agentto_admin_token;
+    // Prefer an explicit Bearer token so customer sessions cannot be
+    // overridden by a stale admin cookie in the same browser.
+    const authHeader = req.headers.authorization;
+    let token: string | undefined;
 
-    // برای APIهای قدیمی، Bearer Token هم همچنان پشتیبانی می‌شود
-    if (!token) {
-      const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const [type, bearerToken] = authHeader.split(" ");
 
-      if (authHeader) {
-        const [type, bearerToken] = authHeader.split(" ");
-
-        if (type === "Bearer" && bearerToken) {
-          token = bearerToken;
-        }
+      if (type === "Bearer" && bearerToken) {
+        token = bearerToken;
       }
+    }
+
+    // Admin/browser sessions that rely on the HttpOnly cookie remain supported.
+    if (!token) {
+      token = req.cookies?.agentto_admin_token;
     }
 
     if (!token) {
