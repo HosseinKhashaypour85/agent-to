@@ -32,6 +32,7 @@ import adminAuthRoutes from "./modules/admin/auth/admin-auth.routes";
 import adminUsageRoutes from "./modules/admin/usage.routes";
 import usageRoutes from "./modules/usage/usage.routes";
 import customerAccountRoutes from "./modules/customer-account/customer-account.routes";
+import supportRoutes from "./modules/support/support.routes";
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -126,6 +127,7 @@ app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/agent/products", agentProductsRoutes);
 app.use("/api/v1/usage", usageRoutes);
 app.use("/api/v1/customer-account", customerAccountRoutes);
+app.use("/api/v1/support", supportRoutes);
 app.use("/api/v1/agent/channels", agentChannelRoutes);
 app.use("/api/v1/agent/knowledge", agentKnowledgeRoutes);
 app.use("/api/v1/agent", agentRoutes);
