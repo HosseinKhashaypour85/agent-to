@@ -1,42 +1,86 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import CustomerShell from "@/components/CustomerShell";
-import { ArrowLeft, ArrowUpLeft, Bot, Boxes, CheckCircle2, ChevronLeft, CircleAlert, Database, MessageSquareText, Plus, RefreshCw, Sparkles, Users, Zap } from "lucide-react";
+import { api } from "@/lib/api";
+import { Activity, AlertCircle, ArrowLeft, Bot, Boxes, LoaderCircle, MessageSquareText, RefreshCw, Sparkles, Users } from "lucide-react";
 
-const fa = (n: number) => n.toLocaleString("fa-IR");
-const metrics = [
-  { label: "محصولات کاتالوگ", value: "۱٬۲۸۴", note: "در ۳ منبع", icon: Boxes, tint: "bg-[#E4F3EF] text-[#10706B]" },
-  { label: "مکالمات این ماه", value: "۳٬۸۴۲", note: "۱۲٪ بیشتر از ماه قبل", icon: MessageSquareText, tint: "bg-[#EAF0FF] text-[#536DD8]" },
-  { label: "مشتریان ثبت‌شده", value: "۹۶۸", note: "۶۴ مشتری جدید", icon: Users, tint: "bg-[#FFF2DF] text-[#B7791F]" },
-  { label: "ایجنت فعال", value: "۳", note: "همه در حال فعالیت", icon: Bot, tint: "bg-[#F1EAFE] text-[#805AD5]" },
-];
-const activity = [
-  { title: "همگام‌سازی محصولات فروشگاه", detail: "۱۲۴ محصول بررسی شد", time: "۸ دقیقه پیش", state: "success" },
-  { title: "تحلیل هوشمند محصولات", detail: "۸۷ محصول آماده استفاده است", time: "۳۵ دقیقه پیش", state: "success" },
-  { title: "اتصال منبع جدید", detail: "فروشگاه اینترنتی شما", time: "دیروز", state: "pending" },
-];
+type Product = { id: string; name: string; isActive?: boolean; source?: string; createdAt?: string };
+type Customer = { id: string; firstName?: string | null; lastName?: string | null; createdAt?: string };
+type Conversation = { id: string; status?: string; createdAt?: string; channel?: string };
+type Agent = { id?: string; name?: string; isActive?: boolean; status?: string };
+type Usage = { summary?: { aiMessages?: number; inputTokens?: number; outputTokens?: number; totalTokens?: number; requests?: number } };
+type DashboardData = { products: Product[]; customers: Customer[]; conversations: Conversation[]; agent: Agent | null; usage: Usage | null };
+const numberFa = (v: number) => new Intl.NumberFormat("fa-IR").format(Number.isFinite(v) ? v : 0);
+const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
 
 export default function CustomerDashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true); setError("");
+    const [products, customers, conversations, agent, usage] = await Promise.allSettled([
+      api<any>("/agent/products?page=1&limit=100"),
+      api<any>("/customers"),
+      api<any>("/conversations"),
+      api<any>("/agent"),
+      api<any>("/usage/me"),
+    ]);
+    const failed = [products, customers, conversations, agent, usage].filter(x => x.status === "rejected");
+    const unwrapList = (result: PromiseSettledResult<any>, keys: string[] = []) => {
+      if (result.status !== "fulfilled") return [];
+      const v = result.value;
+      for (const key of keys) if (Array.isArray(v?.[key])) return v[key];
+      if (Array.isArray(v?.data)) return v.data;
+      if (Array.isArray(v?.data?.rows)) return v.data.rows;
+      if (Array.isArray(v?.products)) return v.products;
+      if (Array.isArray(v?.data?.products)) return v.data.products;
+      return [];
+    };
+    const agentResult = agent.status === "fulfilled" ? (agent.value?.agent ?? agent.value?.data?.agent ?? agent.value?.data ?? null) : null;
+    const usageResult = usage.status === "fulfilled" && usage.value?.success ? usage.value.data : null;
+    setData({
+      products: unwrapList(products, ["products"]),
+      customers: unwrapList(customers),
+      conversations: unwrapList(conversations),
+      agent: agentResult,
+      usage: usageResult,
+    });
+    if (failed.length) setError("بعضی از APIها پاسخ ندادند؛ اعداد زیر فقط از endpointهای موفق دریافت شده‌اند. اتصال و مجوز همان endpointها را بررسی کن.");
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const productCount = data?.products.length ?? 0;
+  const customerCount = data?.customers.length ?? 0;
+  const conversationsThisMonth = (data?.conversations ?? []).filter(c => c.createdAt && new Date(c.createdAt) >= monthStart).length;
+  const usageSummary = data?.usage?.summary;
+  const cards = [
+    { label: "محصولات کاتالوگ", value: productCount, note: "دریافت‌شده از API محصولات", icon: Boxes },
+    { label: "مکالمات این ماه", value: conversationsThisMonth, note: "بر اساس تاریخ ثبت مکالمه", icon: MessageSquareText },
+    { label: "مشتریان ثبت‌شده", value: customerCount, note: "حساب مشتری فعلی", icon: Users },
+    { label: "ایجنت", value: data?.agent ? (data.agent.isActive === false || data.agent.status === "INACTIVE" ? "غیرفعال" : "موجود") : "—", note: "وضعیت برگشتی از API", icon: Bot },
+  ];
+
   return <CustomerShell>
     <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-      <div><div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#D6EAE5] bg-[#EFF8F5] px-3 py-1 text-[11px] font-bold text-[#10706B]"><Sparkles size={13}/> فضای هوشمند کسب‌وکار شما</div><h1 className="text-2xl font-black tracking-tight text-[#163633] sm:text-[30px]">سلام، خوش اومدی 👋</h1><p className="mt-2 text-sm text-[#7C8C88]">وضعیت ایجنت‌ها، محصولات و ارتباط با مشتریانت رو یک‌جا ببین.</p></div>
-      <Link href="/product-sources" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#10706B] px-4 py-3 text-sm font-bold text-white shadow-[0_8px_20px_-12px_rgba(16,112,107,.8)] transition hover:bg-[#0B5B57]"><Plus size={17}/> اتصال منبع محصولات</Link>
+      <div><div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#D6EAE5] bg-[#EFF8F5] px-3 py-1 text-[11px] font-bold text-[#10706B]"><Sparkles size={13}/> فضای هوشمند کسب‌وکار شما</div><h1 className="text-2xl font-black tracking-tight text-[#163633] sm:text-[30px]">داشبورد کسب‌وکار</h1><p className="mt-2 text-sm text-[#7C8C88]">آمار از API و داده‌های واقعی حساب شما بارگذاری می‌شود.</p></div>
+      <button onClick={() => void load()} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#10706B] px-4 py-3 text-sm font-bold text-white disabled:opacity-60">{loading ? <LoaderCircle size={16} className="animate-spin"/> : <RefreshCw size={16}/>} بروزرسانی</button>
     </div>
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(m=>{const Icon=m.icon;return <article key={m.label} className="rounded-2xl border border-[#E4EBE8] bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#143C3510]"><div className="flex items-center justify-between"><span className={`grid h-11 w-11 place-items-center rounded-[14px] ${m.tint}`}><Icon size={21}/></span><span className="rounded-full bg-[#F5F8F7] px-2 py-1 text-[10px] text-[#87938F]">این ماه</span></div><p className="mt-5 text-3xl font-black tracking-tight text-[#183A36]">{m.value}</p><p className="mt-1 text-sm font-bold text-[#4D625D]">{m.label}</p><p className="mt-2 text-xs text-[#8A9794]">{m.note}</p></article>})}</section>
-    <section className="mt-5 grid gap-5 xl:grid-cols-[1.45fr_1fr]">
-      <article className="overflow-hidden rounded-2xl border border-[#E4EBE8] bg-white">
-        <div className="flex items-center justify-between border-b border-[#EDF1EF] px-5 py-4 sm:px-6"><div><h2 className="font-extrabold">مصرف هوش مصنوعی</h2><p className="mt-1 text-xs text-[#87938F]">سهمیه پلن Pro در دوره جاری</p></div><Link href="/customer-usage" className="flex items-center gap-1 text-xs font-bold text-[#10706B]">جزئیات <ArrowLeft size={14}/></Link></div>
-        <div className="p-5 sm:p-6"><div className="flex items-end justify-between"><div><span className="text-3xl font-black text-[#173B36]">۳٬۴۲۰</span><span className="mr-2 text-sm text-[#87938F]">از ۵٬۰۰۰ پاسخ</span></div><span className="rounded-full bg-[#E8F4F0] px-3 py-1 text-xs font-bold text-[#10706B]">۶۸٪ مصرف</span></div><div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#EAF0EE]"><div className="h-full w-[68%] rounded-full bg-gradient-to-l from-[#10706B] to-[#2E958B]"/></div><div className="mt-3 flex justify-between text-xs text-[#899794]"><span>۱٬۵۸۰ پاسخ باقی‌مانده</span><span>تمدید: ۲۸ مهر</span></div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-[#F8FAF9] p-3"><p className="text-xs text-[#87938F]">ورودی</p><b className="mt-1 block text-lg">۲۴۸ هزار</b><small className="text-[10px] text-[#87938F]">توکن</small></div><div className="rounded-xl bg-[#F8FAF9] p-3"><p className="text-xs text-[#87938F]">خروجی</p><b className="mt-1 block text-lg">۱۷۶ هزار</b><small className="text-[10px] text-[#87938F]">توکن</small></div><div className="rounded-xl bg-[#F8FAF9] p-3"><p className="text-xs text-[#87938F]">پلن فعلی</p><b className="mt-1 block text-lg">Pro</b><small className="text-[10px] text-[#10706B]">۱٬۱۹۹٬۰۰۰ تومان / ماه</small></div></div>
-        </div>
-      </article>
-      <article className="rounded-2xl border border-[#DCEBE6] bg-[#F0F8F5] p-5 sm:p-6"><div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-[14px] bg-white text-[#10706B] shadow-sm"><Sparkles size={21}/></span><div><h2 className="font-extrabold">هوش محصول آماده‌ست؟</h2><p className="mt-1 text-xs text-[#718781]">محصولاتت رو به ایجنت وصل کن</p></div></div><p className="mt-4 text-sm leading-7 text-[#526D66]">منبع محصولات رو متصل کن تا AGENT-TO اطلاعات محصولات رو بررسی کنه و ایجنت بتونه دقیق‌تر به سؤال‌های مشتری جواب بده.</p><div className="mt-5 space-y-3"><div className="flex items-center gap-3 rounded-xl bg-white/80 p-3"><CheckCircle2 size={17} className="text-[#10706B]"/><span className="flex-1 text-xs font-semibold">کاتالوگ محصولات</span><span className="text-[10px] text-[#10706B]">متصل</span></div><div className="flex items-center gap-3 rounded-xl bg-white/80 p-3"><CircleAlert size={17} className="text-[#B7791F]"/><span className="flex-1 text-xs font-semibold">بررسی دانش محصولات</span><span className="text-[10px] text-[#B7791F]">نیازمند بررسی</span></div></div><Link href="/product-analysis" className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#10706B] px-4 py-3 text-sm font-bold text-white hover:bg-[#0B5B57]">مشاهده تحلیل هوشمند <ArrowLeft size={16}/></Link></article>
-    </section>
-    <section className="mt-5 grid gap-5 xl:grid-cols-2">
-      <article className="rounded-2xl border border-[#E4EBE8] bg-white"><div className="flex items-center justify-between border-b border-[#EDF1EF] px-5 py-4"><h2 className="font-extrabold">فعالیت‌های اخیر</h2><button className="text-xs font-bold text-[#10706B]">مشاهده همه</button></div><div className="divide-y divide-[#EDF1EF]">{activity.map((a,i)=><div key={a.title} className="flex items-start gap-3 px-5 py-4"><span className={`mt-0.5 grid h-9 w-9 place-items-center rounded-xl ${a.state==="success"?"bg-[#E7F5EF] text-[#16835D]":"bg-[#FFF3DF] text-[#B7791F]"}`}>{a.state==="success"?<CheckCircle2 size={17}/>:<RefreshCw size={17}/>}</span><div className="min-w-0 flex-1"><p className="text-sm font-bold">{a.title}</p><p className="mt-1 text-xs text-[#87938F]">{a.detail}</p></div><span className="whitespace-nowrap text-[10px] text-[#9AA5A2]">{a.time}</span></div>)}</div></article>
-      <article className="rounded-2xl border border-[#E4EBE8] bg-white"><div className="flex items-center justify-between border-b border-[#EDF1EF] px-5 py-4"><h2 className="font-extrabold">منابع محصولات</h2><Link href="/product-sources" className="flex items-center gap-1 text-xs font-bold text-[#10706B]">مدیریت منابع <ArrowLeft size={14}/></Link></div><div className="divide-y divide-[#EDF1EF]">{[{name:"فروشگاه اینترنتی",type:"API فروشگاه",products:"۹۸۶ محصول",status:"همگام‌سازی موفق",ok:true},{name:"فایل کاتالوگ",type:"CSV",products:"۲۹۸ محصول",status:"نیازمند بررسی",ok:false}].map(s=><div key={s.name} className="flex items-center gap-3 px-5 py-4"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F0F7F5] text-[#10706B]"><Database size={18}/></span><div className="min-w-0 flex-1"><p className="text-sm font-bold">{s.name}</p><p className="mt-1 text-xs text-[#87938F]">{s.type} · {s.products}</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${s.ok?"bg-[#E7F5EF] text-[#16835D]":"bg-[#FFF3DF] text-[#A66B14]"}`}>{s.status}</span></div>)}</div><Link href="/product-sources" className="flex items-center justify-center gap-2 border-t border-[#EDF1EF] px-5 py-3 text-xs font-bold text-[#10706B]"><Plus size={15}/> افزودن منبع جدید</Link></article>
-    </section>
-    <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#E4EBE8] bg-white p-5 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#E8F4F0] text-[#10706B]"><Zap size={19}/></span><div><p className="text-sm font-extrabold">برای رشد کسب‌وکارت آماده‌ای؟</p><p className="mt-1 text-xs text-[#87938F]">ایجنتت رو به کاتالوگ وصل کن تا به سؤالات محصول پاسخ بده.</p></div></div><Link href="/customer-agents" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#DCE7E3] px-4 py-2.5 text-xs font-bold hover:bg-[#F7FAF9]">مدیریت ایجنت‌ها <ArrowLeft size={14}/></Link></div>
+    {error && <div role="alert" className="mb-5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800"><AlertCircle size={18} className="mt-1 shrink-0"/>{error}</div>}
+    {loading && !data ? <div className="flex items-center justify-center gap-2 rounded-2xl border bg-white p-12 text-sm text-slate-500"><LoaderCircle size={18} className="animate-spin"/> در حال دریافت اطلاعات واقعی...</div> : <>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(c=>{const Icon=c.icon;return <article key={c.label} className="rounded-2xl border border-[#E4EBE8] bg-white p-5"><span className="grid h-11 w-11 place-items-center rounded-[14px] bg-[#E4F3EF] text-[#10706B]"><Icon size={21}/></span><p className="mt-5 text-3xl font-black tracking-tight text-[#183A36]">{typeof c.value === "number" ? numberFa(c.value) : c.value}</p><p className="mt-1 text-sm font-bold text-[#4D625D]">{c.label}</p><p className="mt-2 text-xs text-[#8A9794]">{c.note}</p></article>})}</section>
+      <section className="mt-5 grid gap-5 xl:grid-cols-2">
+        <article className="rounded-2xl border border-[#E4EBE8] bg-white p-5 sm:p-6">
+          <div className="flex items-center justify-between"><div><h2 className="font-extrabold">مصرف هوش مصنوعی</h2><p className="mt-1 text-xs text-[#87938F]">آمار ثبت‌شده برای حساب شما</p></div><Link href="/customer-usage" className="flex items-center gap-1 text-xs font-bold text-[#10706B]">جزئیات <ArrowLeft size={14}/></Link></div>
+          {usageSummary ? <><div className="mt-6 flex items-end justify-between gap-3"><div><span className="text-3xl font-black text-[#173B36]">{numberFa(usageSummary.aiMessages ?? 0)}</span><span className="mr-2 text-sm text-[#87938F]">پاسخ AI ثبت‌شده</span></div><Activity className="text-[#10706B]" size={22}/></div><div className="mt-5 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-[#F8FAF9] p-3"><p className="text-xs text-[#87938F]">توکن ورودی</p><b className="mt-1 block text-lg">{numberFa(usageSummary.inputTokens ?? 0)}</b></div><div className="rounded-xl bg-[#F8FAF9] p-3"><p className="text-xs text-[#87938F]">توکن خروجی</p><b className="mt-1 block text-lg">{numberFa(usageSummary.outputTokens ?? 0)}</b></div><div className="rounded-xl bg-[#F8FAF9] p-3"><p className="text-xs text-[#87938F]">کل توکن</p><b className="mt-1 block text-lg">{numberFa(usageSummary.totalTokens ?? 0)}</b></div></div></> : <p className="mt-6 rounded-xl bg-[#F8FAF9] p-4 text-sm text-[#87938F]">API مصرف هنوز داده‌ای برنگردانده است؛ سهمیه یا پلن ساختگی نمایش داده نمی‌شود.</p>}
+        </article>
+        <article className="rounded-2xl border border-[#E4EBE8] bg-white p-5 sm:p-6"><div className="flex items-center justify-between"><div><h2 className="font-extrabold">دسترسی سریع</h2><p className="mt-1 text-xs text-[#87938F]">مدیریت داده‌های حساب</p></div></div><div className="mt-5 grid gap-3 sm:grid-cols-2"><Link href="/product-catalog" className="rounded-xl border p-4 text-sm font-bold hover:border-[#10706B]">کاتالوگ محصولات <ArrowLeft size={15} className="inline mr-2"/></Link><Link href="/customer-support" className="rounded-xl border p-4 text-sm font-bold hover:border-[#10706B]">تیکت‌های پشتیبانی <ArrowLeft size={15} className="inline mr-2"/></Link><Link href="/customer-usage" className="rounded-xl border p-4 text-sm font-bold hover:border-[#10706B]">مصرف هوش مصنوعی <ArrowLeft size={15} className="inline mr-2"/></Link><Link href="/product-sources" className="rounded-xl border p-4 text-sm font-bold hover:border-[#10706B]">منابع محصولات <ArrowLeft size={15} className="inline mr-2"/></Link></div></article>
+      </section>
+    </>}
   </CustomerShell>;
 }
