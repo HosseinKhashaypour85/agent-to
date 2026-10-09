@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { AlertCircle, LoaderCircle, RefreshCw, Database } from "lucide-react";
 
 type Props = { title: string; description: string; endpoint: string; collection: string; empty: string };
+
 function pickRows(value: any, collection: string): any[] {
   if (Array.isArray(value?.[collection])) return value[collection];
   if (collection === "agent" && value?.agent && typeof value.agent === "object") return [value.agent];
@@ -18,30 +19,114 @@ function pickRows(value: any, collection: string): any[] {
   if (Array.isArray(value?.channels)) return value.channels;
   return [];
 }
+
 function displayValue(value: unknown) {
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
+
 export default function CustomerResourcePage({ title, description, endpoint, collection, empty }: Props) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const load = useCallback(async () => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
+
     try {
       const result = await api<any>(endpoint);
-      if (result?.success === false) throw new Error(result.message || "دریافت اطلاعات ناموفق بود.");
+      if (result?.success === false) {
+        throw new Error(result.message || "دریافت اطلاعات ناموفق بود.");
+      }
       setRows(pickRows(result, collection));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "دریافت اطلاعات ناموفق بود.");
-    } finally { setLoading(false); }
+      const message = e instanceof Error ? e.message : "دریافت اطلاعات ناموفق بود.";
+
+      // The API returns 404 when this tenant has not created an agent yet.
+      // Treat that as an empty resource, not as a broken page.
+      if (collection === "agent" && message.trim().toLowerCase() === "agent not found") {
+        setRows([]);
+        setError("");
+      } else {
+        setError(message);
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [endpoint, collection]);
-  useEffect(() => { void load(); }, [load]);
-  const columns = Array.from(new Set(rows.slice(0, 30).flatMap(row => Object.keys(row || {})))).filter(k => !["tenantId","password","updatedAt","deletedAt"].includes(k)).slice(0, 6);
-  return <CustomerShell>
-    <div className="mb-7 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="mb-2 text-xs font-bold text-[#10706B]">فضای کسب‌وکار</p><h1 className="text-2xl font-black">{title}</h1><p className="mt-2 text-sm text-[#7D8D89]">{description}</p></div><button onClick={() => void load()} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-3 text-sm font-bold disabled:opacity-50"><RefreshCw size={16}/> تازه‌سازی</button></div>
-    {error && <div role="alert" className="mb-4 flex gap-2 rounded-xl bg-rose-50 p-4 text-sm text-rose-700"><AlertCircle size={18}/>{error}</div>}
-    {loading ? <div className="flex items-center justify-center gap-2 rounded-2xl border bg-white p-12 text-sm text-slate-500"><LoaderCircle className="animate-spin" size={18}/> دریافت داده از API...</div> : !rows.length ? <div className="rounded-2xl border border-[#E4EBE8] bg-white p-12 text-center"><Database className="mx-auto mb-3 text-[#10706B]" size={28}/><p className="font-bold">{empty}</p><p className="mt-2 text-xs text-[#87938F]">هیچ داده نمونه‌ای به‌جای اطلاعات واقعی نمایش داده نمی‌شود.</p></div> : <div className="overflow-x-auto rounded-2xl border border-[#E4EBE8] bg-white"><table className="w-full min-w-[600px] text-right text-sm"><thead className="bg-[#F7FAF8]"><tr>{columns.map(k=><th key={k} className="px-4 py-3 font-bold text-[#6C7D77]">{k}</th>)}</tr></thead><tbody className="divide-y divide-[#EDF1EF]">{rows.map((row,i)=><tr key={String(row.id ?? row._id ?? i)}>{columns.map(k=><td key={k} className="max-w-xs truncate px-4 py-3 text-[#334B44]">{displayValue(row[k])}</td>)}</tr>)}</tbody></table></div>}
-  </CustomerShell>;
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const columns = Array.from(
+    new Set(rows.slice(0, 30).flatMap((row) => Object.keys(row || {}))),
+  )
+    .filter((key) => !["tenantId", "password", "updatedAt", "deletedAt"].includes(key))
+    .slice(0, 6);
+
+  return (
+    <CustomerShell>
+      <div className="mb-7 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <p className="mb-2 text-xs font-bold text-[#10706B]">فضای کسب‌وکار</p>
+          <h1 className="text-2xl font-black">{title}</h1>
+          <p className="mt-2 text-sm text-[#7D8D89]">{description}</p>
+        </div>
+        <button
+          onClick={() => void load()}
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-3 text-sm font-bold disabled:opacity-50"
+        >
+          <RefreshCw size={16} /> تازه‌سازی
+        </button>
+      </div>
+
+      {error && (
+        <div role="alert" className="mb-4 flex gap-2 rounded-xl bg-rose-50 p-4 text-sm text-rose-700">
+          <AlertCircle size={18} />
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 rounded-2xl border bg-white p-12 text-sm text-slate-500">
+          <LoaderCircle className="animate-spin" size={18} /> دریافت داده از API...
+        </div>
+      ) : !rows.length ? (
+        <div className="rounded-2xl border border-[#E4EBE8] bg-white p-12 text-center">
+          <Database className="mx-auto mb-3 text-[#10706B]" size={28} />
+          <p className="font-bold">{empty}</p>
+          <p className="mt-2 text-xs text-[#87938F]">
+            هیچ داده نمونه‌ای به‌جای اطلاعات واقعی نمایش داده نمی‌شود.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-[#E4EBE8] bg-white">
+          <table className="w-full min-w-[600px] text-right text-sm">
+            <thead className="bg-[#F7FAF8]">
+              <tr>
+                {columns.map((key) => (
+                  <th key={key} className="px-4 py-3 font-bold text-[#6C7D77]">{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#EDF1EF]">
+              {rows.map((row, index) => (
+                <tr key={String(row.id ?? row._id ?? index)}>
+                  {columns.map((key) => (
+                    <td key={key} className="max-w-xs truncate px-4 py-3 text-[#334B44]">
+                      {displayValue(row[key])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </CustomerShell>
+  );
 }
