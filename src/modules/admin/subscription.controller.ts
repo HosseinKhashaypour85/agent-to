@@ -22,103 +22,80 @@ export async function create(
       status,
       startsAt,
       expiresAt,
+      siteId,
+      siteName,
+      domain,
     } = req.body || {};
 
-    if (!tenantId) {
+    if (!tenantId || !planId || !startsAt || !expiresAt) {
       return res.status(400).json({
         success: false,
-        message:
-          "tenantId is required",
+        message: "tenantId, planId, startsAt and expiresAt are required",
       });
     }
 
-    if (!planId) {
+    if (!siteId || !siteName || !domain) {
       return res.status(400).json({
         success: false,
-        message:
-          "planId is required",
+        code: "SITE_DETAILS_REQUIRED",
+        message: "siteId, siteName and domain are required",
       });
     }
 
-    if (!startsAt) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "startsAt is required",
-      });
-    }
-
-    if (!expiresAt) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "expiresAt is required",
-      });
-    }
-
-    const subscription =
-      await createSubscription({
-        tenantId,
-        planId,
-        status,
-        startsAt:
-          new Date(startsAt),
-        expiresAt:
-          new Date(expiresAt),
-      });
+    const result = await createSubscription({
+      tenantId,
+      planId,
+      status,
+      startsAt: new Date(startsAt),
+      expiresAt: new Date(expiresAt),
+      siteId,
+      siteName,
+      domain,
+    });
 
     return res.status(201).json({
       success: true,
-      message:
-        "Subscription created successfully",
-      subscription,
+      message: "Subscription and site created successfully",
+      subscription: result.subscription,
+      site: result.site,
     });
   } catch (error) {
-    console.error(
-      "CREATE SUBSCRIPTION ERROR:",
-      error
-    );
+    console.error("CREATE SUBSCRIPTION ERROR:", error);
 
-    if (
-      error instanceof Error &&
-      error.message ===
-        "TENANT_NOT_FOUND"
-    ) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Tenant not found",
-      });
+    if (error instanceof Error && error.message === "TENANT_NOT_FOUND") {
+      return res.status(404).json({ success: false, message: "Tenant not found" });
     }
-
-    if (
-      error instanceof Error &&
-      error.message ===
-        "PLAN_NOT_FOUND"
-    ) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Plan not found",
-      });
+    if (error instanceof Error && error.message === "PLAN_NOT_FOUND") {
+      return res.status(404).json({ success: false, message: "Plan not found" });
     }
-
-    if (
-      error instanceof Error &&
-      error.message ===
-        "INVALID_SUBSCRIPTION_DATES"
-    ) {
+    if (error instanceof Error && error.message === "INVALID_SUBSCRIPTION_DATES") {
+      return res.status(400).json({ success: false, message: "expiresAt must be after startsAt" });
+    }
+    if (error instanceof Error && error.message === "INVALID_SITE_ID") {
       return res.status(400).json({
         success: false,
-        message:
-          "expiresAt must be after startsAt",
+        code: "INVALID_SITE_ID",
+        message: "Site ID must contain 3 to 50 uppercase letters, numbers, underscores or hyphens.",
+      });
+    }
+    if (error instanceof Error && error.message === "SITE_ID_ALREADY_EXISTS") {
+      return res.status(409).json({
+        success: false,
+        code: "SITE_ID_ALREADY_EXISTS",
+        message: "This Site ID is already assigned to another site.",
+      });
+    }
+    if (error instanceof Error && error.message === "SITE_DETAILS_REQUIRED") {
+      return res.status(400).json({
+        success: false,
+        code: "SITE_DETAILS_REQUIRED",
+        message: "Site ID, site name and domain are required.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to create subscription",
+      message: "Failed to create subscription",
     });
   }
 }
