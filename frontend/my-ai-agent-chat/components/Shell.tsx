@@ -27,7 +27,6 @@ import {
   Sun,
   Moon,
   Monitor,
-  Globe,
 } from "lucide-react";
 
 /* ============ Nav groups ============ */
