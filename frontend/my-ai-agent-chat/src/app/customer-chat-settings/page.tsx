@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import CustomerShell from "@/components/CustomerShell";
 import {
   Check,
   LoaderCircle,
@@ -148,6 +149,7 @@ export default function CustomerChatSettingsPage() {
   const selectedSite = sites.find((s) => s.id === siteId);
 
   return (
+    <CustomerShell>
     <div className="mx-auto max-w-7xl px-1 pb-16">
       {/* ===== Header ===== */}
       <div className="relative mb-8 overflow-hidden rounded-3xl border border-[#DCE7E4] bg-gradient-to-br from-white via-[#F4FBF9] to-[#E8F4F1] p-6 shadow-sm sm:p-8">
@@ -472,5 +474,6 @@ export default function CustomerChatSettingsPage() {
         </div>
       )}
     </div>
+    </CustomerShell>
   );
 }
