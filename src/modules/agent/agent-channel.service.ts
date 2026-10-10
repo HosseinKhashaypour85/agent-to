@@ -23,12 +23,26 @@ export async function getChannels(
     throw new Error("AGENT_NOT_FOUND");
   }
 
-  return AgentChannel.findAll({
+  const channels = await AgentChannel.findAll({
     where: {
       tenantId,
       agentId: agent.id,
     },
     order: [["createdAt", "ASC"]],
+  });
+
+  // Never expose the Telegram bot token through the generic channels API.
+  return channels.map((channel) => {
+    const config = (channel.config as Record<string, unknown> | null) || {};
+    const { botToken, ...safeConfig } = config;
+
+    return {
+      ...channel.toJSON(),
+      config: {
+        ...safeConfig,
+        ...(botToken ? { hasBotToken: true } : {}),
+      },
+    };
   });
 }
 
