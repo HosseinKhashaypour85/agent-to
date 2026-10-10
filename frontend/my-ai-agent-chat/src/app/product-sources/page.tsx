@@ -9,6 +9,7 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  Barcode,
   CheckCircle2,
   CloudUpload,
   Database,
@@ -21,7 +22,7 @@ import {
   X,
 } from "lucide-react";
 
-type SourceType = "api" | "excel" | "json";
+type SourceType = "api" | "excel" | "json" | "barcode";
 type ProductRow = Record<string, unknown>;
 type ImportResult = {
   success?: boolean;
@@ -52,6 +53,12 @@ const methods: {
     title: "وارد کردن فایل JSON",
     description: "ورود محصولات از آرایه JSON یا خروجی رایج APIها",
     icon: FileJson,
+  },
+  {
+    id: "barcode",
+    title: "افزودن با بارکد",
+    description: "جست‌وجوی محصول با بارکد و ثبت اطلاعات شناسایی‌شده",
+    icon: Barcode,
   },
 ];
 
@@ -117,6 +124,7 @@ function normalizeFileRows(rows: ProductRow[]): ProductRow[] {
 export default function ProductSourcesPage() {
   const [source, setSource] = useState<SourceType>("api");
   const [apiUrl, setApiUrl] = useState("");
+  const [barcode, setBarcode] = useState("");
   const [authType, setAuthType] = useState("none");
   const [apiKeyHeader, setApiKeyHeader] = useState("x-api-key");
   const [token, setToken] = useState("");
@@ -180,6 +188,12 @@ export default function ProductSourcesPage() {
             apiKeyHeader,
           }),
         });
+      } else if (source === "barcode") {
+        if (!/^\\d{8,14}$/.test(barcode.trim())) throw new Error("بارکد باید یک عدد ۸ تا ۱۴ رقمی باشد.");
+        result = await api<ImportResult>("/agent/products/import", {
+          method: "POST",
+          body: JSON.stringify({ mode: "barcode", barcode: barcode.trim() }),
+        });
       } else {
         if (!file || !previewRows.length) throw new Error("ابتدا یک فایل معتبر انتخاب کن.");
         result = await api<ImportResult>("/agent/products/import", {
@@ -195,6 +209,7 @@ export default function ProductSourcesPage() {
       setNotice(`${new Intl.NumberFormat("fa-IR").format(count)} محصول با موفقیت وارد کاتالوگ شد.`);
       setFile(null);
       setPreviewRows([]);
+      if (source === "barcode") setBarcode("");
       setToken("");
       setFileInputKey((key) => key + 1);
     } catch (e) {
@@ -255,6 +270,10 @@ export default function ProductSourcesPage() {
             <label className="block"><span className="mb-2 block text-xs font-bold">روش احراز هویت</span><select value={authType} onChange={(e) => setAuthType(e.target.value)} className="w-full rounded-xl border border-[#DDE6E2] bg-white px-4 py-3 text-sm"><option value="none">بدون احراز هویت</option><option value="bearer">Bearer Token</option><option value="apiKey">API Key</option></select></label>
             {authType === "apiKey" && <label className="block"><span className="mb-2 block text-xs font-bold">نام هدر API Key</span><input value={apiKeyHeader} onChange={(e) => setApiKeyHeader(e.target.value)} dir="ltr" className="w-full rounded-xl border border-[#DDE6E2] px-4 py-3 text-left text-sm outline-none focus:border-[#10706B]" placeholder="x-api-key" /></label>}
             {authType !== "none" && <label className="block"><span className="mb-2 block text-xs font-bold">توکن دسترسی</span><div className="flex items-center gap-2 rounded-xl border border-[#DDE6E2] px-3"><KeyRound size={16} className="text-[#87938F]" /><input type="password" autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} className="w-full py-3 text-sm outline-none" placeholder="توکن API" /></div><span className="mt-1 block text-[11px] text-[#87938F]">توکن در کاتالوگ ذخیره نمی‌شود؛ فقط برای همین درخواست استفاده می‌شود.</span></label>}
+          </div> : source === "barcode" ? <div className="mt-7 space-y-4 border-t border-[#EDF1EF] pt-6">
+            <div><h3 className="font-extrabold">افزودن محصول با بارکد</h3><p className="mt-1 text-xs leading-6 text-[#87938F]">بارکد را وارد کن یا از اسکنر بارکد استفاده کن؛ بسیاری از اسکنرها عدد را مستقیم در این کادر تایپ می‌کنند. اطلاعات از پایگاه Open Food Facts جست‌وجو می‌شود و پوشش آن برای همه کالاها تضمین‌شده نیست.</p></div>
+            <label className="block"><span className="mb-2 block text-xs font-bold">شماره بارکد (۸ تا ۱۴ رقم)</span><div className="flex items-center gap-3 rounded-xl border border-[#DDE6E2] px-4 focus-within:border-[#10706B]"><Barcode size={20} className="shrink-0 text-[#10706B]" /><input value={barcode} onChange={(e) => setBarcode(e.target.value.replace(/\\D/g, "").slice(0, 14))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (barcode.trim()) void importSelectedSource(); } }} dir="ltr" inputMode="numeric" autoComplete="off" placeholder="مثلاً 3017620422003" className="w-full py-4 text-left text-base tracking-widest outline-none" /></div></label>
+            <div className="rounded-xl border border-[#E4EBE8] bg-[#F8FBF9] p-4 text-xs leading-6 text-[#71837D]"><b className="text-[#163633]">نکته:</b> این روش برای کالاهایی مناسب است که در پایگاه اطلاعات بارکد ثبت شده باشند. اگر کالا پیدا نشد، می‌توانی آن را از طریق Excel، JSON یا API وارد کنی.</div>
           </div> : <div className="mt-7 border-t border-[#EDF1EF] pt-6">
             <h3 className="font-extrabold">{source === "excel" ? "انتخاب فایل اکسل" : "انتخاب فایل JSON"}</h3>
             <p className="mt-1 text-xs leading-6 text-[#87938F]">{source === "excel" ? "فرمت‌های XLSX و XLS پشتیبانی می‌شوند. ستون نام محصول الزامی است." : "فایل می‌تواند یک آرایه JSON یا شیئی با کلید products، items، results یا data باشد."}</p>
@@ -273,7 +292,7 @@ export default function ProductSourcesPage() {
 
           <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF1EF] pt-5">
             <p className="max-w-lg text-xs leading-6 text-[#87938F]">محصولات به کاتالوگ همین حساب اضافه می‌شوند. اطلاعات حساب‌های دیگر قابل دسترسی نیست.</p>
-            <button type="button" onClick={() => void importSelectedSource()} disabled={busy || (source === "api" ? !apiUrl.trim() : !file || previewRows.length === 0)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#10706B] px-5 py-3 text-sm font-bold text-white hover:bg-[#0D5D59] disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" onClick={() => void importSelectedSource()} disabled={busy || (source === "api" ? !apiUrl.trim() : source === "barcode" ? !/^\\d{8,14}$/.test(barcode.trim()) : !file || previewRows.length === 0)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#10706B] px-5 py-3 text-sm font-bold text-white hover:bg-[#0D5D59] disabled:cursor-not-allowed disabled:opacity-50">
               {busy ? <LoaderCircle size={16} className="animate-spin" /> : <ArrowLeft size={16} />}
               {busy ? "در حال واردسازی..." : "وارد کردن محصولات"}
             </button>
