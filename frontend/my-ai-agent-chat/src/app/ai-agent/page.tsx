@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   Clock3,
+  History,
   Loader2,
   MapPin,
   MessageCircle,
@@ -46,6 +47,7 @@ function getSiteId(): string {
 type ChatSettings = {
   primaryColor: string;
   secondaryColor: string;
+  accentColor: string;
   backgroundColor: string;
   surfaceColor: string;
   userMessageColor: string;
@@ -295,6 +297,36 @@ export default function AIAgentPage() {
 
     return id;
   }, [siteId]);
+
+  async function loadHistory() {
+    if (!siteId || !visitorId) return;
+
+    try {
+      const query = new URLSearchParams({ siteId, visitorId });
+      const response = await fetch(`${API_URL}/chat/history?${query.toString()}`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+
+      const result = await response.json();
+      if (!result?.success || !Array.isArray(result.data)) return;
+
+      setMessages(result.data.map((item: any) => ({
+        id: String(item.id),
+        sender: item.sender === "USER" ? "USER" : "AI",
+        content: String(item.content ?? ""),
+      })));
+    } catch (err) {
+      console.warn("[AI AGENT] History could not be loaded", err);
+    }
+  }
+
+  useEffect(() => {
+    void loadHistory();
+    // History is isolated by siteId and its site-specific visitor ID.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteId, visitorId]);
 
   /* ====================================================
      Send Message
@@ -609,23 +641,32 @@ export default function AIAgentPage() {
 
           </div>
 
-          <div
-            className="hidden sm:flex items-center gap-2 rounded-full px-3 py-2 text-[11px] shrink-0"
-            style={{
-              color: mutedText,
-
-              backgroundColor:
-                settings.backgroundColor,
-
-              border:
-                `1px solid ${settings.borderColor}`,
-            }}
-          >
-            <Clock3 size={13} />
-
-            <span>
-              {settings.responseTimeText}
-            </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void loadHistory()}
+              title="بازیابی تاریخچه گفتگو"
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[11px] transition hover:opacity-80"
+              style={{
+                color: settings.accentColor,
+                backgroundColor: settings.backgroundColor,
+                border: `1px solid ${settings.borderColor}`,
+              }}
+            >
+              <History size={14} />
+              <span>تاریخچه</span>
+            </button>
+            <div
+              className="hidden sm:flex items-center gap-2 rounded-full px-3 py-2 text-[11px] shrink-0"
+              style={{
+                color: mutedText,
+                backgroundColor: settings.backgroundColor,
+                border: `1px solid ${settings.borderColor}`,
+              }}
+            >
+              <Clock3 size={13} />
+              <span>{settings.responseTimeText}</span>
+            </div>
           </div>
 
         </header>

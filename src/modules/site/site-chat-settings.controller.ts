@@ -181,6 +181,9 @@ export async function getPublicConfig(
         secondaryColor:
           result.settings.secondaryColor,
 
+        accentColor:
+          result.settings.accentColor,
+
         backgroundColor:
           result.settings.backgroundColor,
 

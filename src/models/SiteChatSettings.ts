@@ -24,6 +24,7 @@ class SiteChatSettings extends Model<
 
   declare primaryColor: string;
   declare secondaryColor: string;
+  declare accentColor: string;
 
   declare backgroundColor: string;
   declare surfaceColor: string;
@@ -133,6 +134,12 @@ SiteChatSettings.init(
       type: DataTypes.STRING(20),
       allowNull: false,
       defaultValue: "#0D5C58",
+    },
+
+    accentColor: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: "#F59E0B",
     },
 
     backgroundColor: {

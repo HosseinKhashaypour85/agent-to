@@ -4,18 +4,18 @@ import {
 
 import {
   chat,
+  getHistory,
 } from "./chat.controller";
 
 const router =
   Router();
 
 
-// POST /api/v1/chat
+// GET /api/v1/chat/history?siteId=...&visitorId=...
+router.get("/history", getHistory);
 
-router.post(
-  "/",
-  chat
-);
+// POST /api/v1/chat
+router.post("/", chat);
 
 
 export default router;

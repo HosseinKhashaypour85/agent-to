@@ -14,6 +14,7 @@ function getDefaultChatSettings() {
     // Theme
     primaryColor: "#10706B",
     secondaryColor: "#0D5C58",
+    accentColor: "#F59E0B",
 
     backgroundColor: "#F8F9FC",
     surfaceColor: "#FFFFFF",
@@ -167,6 +168,7 @@ export async function updateChatSettings(
     // Theme
     "primaryColor",
     "secondaryColor",
+    "accentColor",
     "backgroundColor",
     "surfaceColor",
     "userMessageColor",

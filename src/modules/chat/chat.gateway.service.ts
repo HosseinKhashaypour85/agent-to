@@ -85,7 +85,7 @@ export async function processChat(
   // ----------------------------------------
 
   const externalCustomerId =
-    `visitor:${data.visitorId.trim()}`;
+    `visitor:${site.siteId}:${data.visitorId.trim()}`;
 
   let customer = await Customer.findOne({
     where: {
