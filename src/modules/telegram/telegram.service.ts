@@ -318,7 +318,7 @@ export async function connectTelegramBot(
   } catch (error) {
     console.error(
       "TELEGRAM getMe ERROR:",
-      error
+      error instanceof Error ? error.message : "Unknown Telegram API error"
     );
 
     throw new Error(
@@ -357,7 +357,7 @@ export async function connectTelegramBot(
   } catch (error) {
     console.error(
       "TELEGRAM setWebhook ERROR:",
-      error
+      error instanceof Error ? error.message : "Unknown Telegram API error"
     );
 
     throw new Error(
