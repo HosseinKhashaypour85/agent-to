@@ -1,25 +1,48 @@
+import { randomBytes } from "crypto";
 import { Op } from "sequelize";
 import Site from "../../models/Site";
+import Subscription from "../../models/Subscription";
+
+function generateSiteId(): string {
+  return `AT-${randomBytes(6).toString("hex").toUpperCase()}`;
+}
 
 export async function createSite(data: {
   tenantId: string;
-  siteId: string;
   domain: string;
   name: string;
 }) {
-  const existingSite = await Site.findOne({
+  const now = new Date();
+
+  const activeSubscription = await Subscription.findOne({
     where: {
-      siteId: data.siteId,
+      tenantId: data.tenantId,
+      status: "ACTIVE",
+      startsAt: { [Op.lte]: now },
+      expiresAt: { [Op.gt]: now },
     },
   });
 
-  if (existingSite) {
-    throw new Error("SITE_ID_ALREADY_EXISTS");
+  if (!activeSubscription) {
+    throw new Error("SUBSCRIPTION_REQUIRED");
+  }
+
+  // Site IDs are generated centrally; customers must not invent or reuse them.
+  let siteId = generateSiteId();
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const existingSite = await Site.findOne({ where: { siteId } });
+    if (!existingSite) break;
+    siteId = generateSiteId();
+  }
+
+  const finalCollision = await Site.findOne({ where: { siteId } });
+  if (finalCollision) {
+    throw new Error("SITE_ID_GENERATION_FAILED");
   }
 
   const site = await Site.create({
     tenantId: data.tenantId,
-    siteId: data.siteId,
+    siteId,
     domain: data.domain,
     name: data.name,
     status: "INSTALLING",
