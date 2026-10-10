@@ -68,14 +68,11 @@ export async function getChatSettings(
     throw new Error("SITE_ID_REQUIRED");
   }
 
-  const where: any = {
-    siteId: siteId.trim(),
-  };
-
-  // CRM
-  if (tenantId) {
-    where.tenantId = tenantId;
-  }
+  // CRM passes the internal Site UUID; the public config endpoint
+  // passes the external siteId used in the widget URL.
+  const where: any = tenantId
+    ? { id: siteId.trim(), tenantId }
+    : { siteId: siteId.trim() };
 
   const site = await Site.findOne({
     where,

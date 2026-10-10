@@ -237,13 +237,13 @@ export async function getHistory(
         tenantId: site.tenantId,
         conversationId: conversationIds,
       },
-      order: [["createdAt", "ASC"]],
+      order: [["createdAt", "DESC"]],
       limit: 200,
     });
 
     return res.status(200).json({
       success: true,
-      data: messages.map((item) => ({
+      data: messages.reverse().map((item) => ({
         id: item.id,
         sender: item.sender,
         content: item.content,
