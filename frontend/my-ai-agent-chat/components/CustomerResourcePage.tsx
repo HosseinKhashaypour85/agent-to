@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import CustomerShell from "@/components/CustomerShell";
 import { api } from "@/lib/api";
-import { AlertCircle, LoaderCircle, RefreshCw, Database } from "lucide-react";
+import { AlertCircle, LoaderCircle, RefreshCw, Database, Plus, X } from "lucide-react";
 
 type Props = { title: string; description: string; endpoint: string; collection: string; empty: string };
 
@@ -30,6 +30,11 @@ export default function CustomerResourcePage({ title, description, endpoint, col
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [channelType, setChannelType] = useState("WEBSITE");
+  const [channelName, setChannelName] = useState("Website");
+  const [channelActive, setChannelActive] = useState(true);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -60,6 +65,30 @@ export default function CustomerResourcePage({ title, description, endpoint, col
   useEffect(() => {
     void load();
   }, [load]);
+
+  const createChannel = async () => {
+    setCreating(true);
+    setError("");
+    try {
+      await api("/agent/channels", {
+        method: "POST",
+        body: JSON.stringify({
+          type: channelType,
+          name: channelName.trim() || channelType,
+          isActive: channelActive,
+        }),
+      });
+      setCreateOpen(false);
+      setChannelType("WEBSITE");
+      setChannelName("Website");
+      setChannelActive(true);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "ساخت کانال ناموفق بود.");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const columns = Array.from(
     new Set(rows.slice(0, 30).flatMap((row) => Object.keys(row || {}))),
