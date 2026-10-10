@@ -8,6 +8,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import {
   LayoutDashboard,
   Building2,
+  Globe,
   CreditCard,
   ReceiptText,
   Users,
@@ -36,6 +37,7 @@ const groups = [
     items: [
       ["داشبورد", "/dashboard", LayoutDashboard],
       ["کسب‌وکارها", "/businesses", Building2],
+      ["سایت‌ها", "/sites", Globe],
       ["کاربران", "/users", Users],
     ],
   },

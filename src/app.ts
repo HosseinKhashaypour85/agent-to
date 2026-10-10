@@ -23,6 +23,7 @@ import installerRoutes from "./modules/installer/installer.routes";
 import telegramRoutes from "./modules/telegram/telegram.routes";
 import adminPlanRoutes from "./modules/admin/plan.routes";
 import adminSubscriptionRoutes from "./modules/admin/subscription.routes";
+import adminSiteRoutes from "./modules/admin/site.routes";
 import adminBusinessRoutes from "./modules/admin/business.routes";
 import adminBusinessOverviewRoutes from "./modules/admin/business-overview.routes";
 import adminBusinessOwnerRoutes from "./modules/admin/business-owner.routes";
@@ -148,6 +149,7 @@ app.use(
   "/api/v1/admin/subscriptions",
   adminSubscriptionRoutes
 );
+app.use("/api/v1/admin/sites", adminSiteRoutes);
 app.use(
   "/api/v1/admin/businesses",
   adminBusinessRoutes
