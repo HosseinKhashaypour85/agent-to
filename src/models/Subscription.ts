@@ -5,6 +5,7 @@ interface SubscriptionAttributes {
   id: string;
   tenantId: string;
   planId: string;
+  siteId: string | null;
 
   status:
     | "ACTIVE"
@@ -25,6 +26,7 @@ interface SubscriptionCreationAttributes
   extends Optional<
     SubscriptionAttributes,
     | "id"
+    | "siteId"
     | "startedAt"
     | "cancelledAt"
     | "createdAt"
@@ -41,6 +43,7 @@ class Subscription
   declare id: string;
   declare tenantId: string;
   declare planId: string;
+  declare siteId: string | null;
 
   declare status:
     | "ACTIVE"
@@ -73,6 +76,12 @@ Subscription.init(
     planId: {
       type: DataTypes.UUID,
       allowNull: false,
+    },
+
+    siteId: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      unique: true,
     },
 
     status: {
