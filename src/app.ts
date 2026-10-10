@@ -33,6 +33,7 @@ import adminUsageRoutes from "./modules/admin/usage.routes";
 import adminSupportRoutes from "./modules/admin/support.routes";
 import supportRoutes from "./modules/support/support.routes";
 import usageRoutes from "./modules/usage/usage.routes";
+import customerSubscriptionRoutes from "./modules/subscription/customer-subscription.routes";
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -170,4 +171,5 @@ app.use("/api/v1/admin/usage", adminUsageRoutes);
 app.use("/api/v1/admin/support", adminSupportRoutes);
 app.use("/api/v1/support", supportRoutes);
 app.use("/api/v1/usage", usageRoutes);
+app.use("/api/v1/subscriptions", customerSubscriptionRoutes);
 export default app;
