@@ -57,28 +57,37 @@ export async function createSubscription(data: {
   }
 
   const transaction = await sequelize.transaction();
-  try {
-    const site = await Site.create({
-      id: randomUUID(),
-      tenantId: data.tenantId,
-      siteId,
-      domain,
-      name: siteName,
-      status: "INSTALLING",
-    }, { transaction });
+  let committed = false;
 
-    const subscription = await Subscription.create({
-      id: randomUUID(),
-      tenantId: data.tenantId,
-      planId: data.planId,
-      siteId,
-      status: data.status || "ACTIVE",
-      startsAt,
-      expiresAt,
-      startedAt: startsAt,
-    }, { transaction });
+  try {
+    const site = await Site.create(
+      {
+        id: randomUUID(),
+        tenantId: data.tenantId,
+        siteId,
+        domain,
+        name: siteName,
+        status: "INSTALLING",
+      },
+      { transaction }
+    );
+
+    const subscription = await Subscription.create(
+      {
+        id: randomUUID(),
+        tenantId: data.tenantId,
+        planId: data.planId,
+        siteId,
+        status: data.status || "ACTIVE",
+        startsAt,
+        expiresAt,
+        startedAt: startsAt,
+      },
+      { transaction }
+    );
 
     await transaction.commit();
+    committed = true;
 
     const savedSubscription = await Subscription.findByPk(subscription.id, {
       include: [
@@ -92,8 +101,12 @@ export async function createSubscription(data: {
       site,
     };
   } catch (error) {
-    if (!transaction.finished) {
-      await transaction.rollback();
+    if (!committed) {
+      try {
+        await transaction.rollback();
+      } catch {
+        // Preserve the original error if rollback is no longer possible.
+      }
     }
     throw error;
   }
