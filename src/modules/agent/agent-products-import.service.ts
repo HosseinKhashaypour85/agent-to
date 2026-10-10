@@ -1,8 +1,9 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { createProduct } from "./agent-products.service";
+import Product from "../../models/Product";
 
-type ImportMode = "api" | "file";
+type ImportMode = "api" | "file" | "barcode";
 type ImportSource = "JSON" | "EXCEL";
 
 function isPrivateIpv4(ip: string) {
@@ -101,12 +102,49 @@ function normalizeProduct(value: any) {
 
 export async function importProducts(
   tenantId: string,
-  input: { mode?: unknown; source?: unknown; url?: unknown; authType?: unknown; token?: unknown; apiKeyHeader?: unknown; products?: unknown }
+  input: { mode?: unknown; source?: unknown; url?: unknown; authType?: unknown; token?: unknown; apiKeyHeader?: unknown; products?: unknown; barcode?: unknown }
 ) {
   let rows: any[];
   let source: "CUSTOM_API" | "MANUAL";
 
-  if (input.mode === "api") {
+  if (input.mode === "barcode") {
+    const barcode = typeof input.barcode === "string" ? input.barcode.trim() : "";
+    if (!/^\\d{8,14}$/.test(barcode)) throw new Error("INVALID_BARCODE");
+    const existing = await Product.findOne({
+      where: { tenantId, sku: barcode },
+    });
+    if (existing) throw new Error("BARCODE_ALREADY_EXISTS");
+    const response = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`,
+      {
+        headers: { Accept: "application/json", "User-Agent": "AgentTo/1.0 (product catalog import)" },
+        signal: AbortSignal.timeout(12000),
+        redirect: "error",
+      }
+    );
+    if (!response.ok) throw new Error(`BARCODE_API_HTTP_${response.status}`);
+    const payload: any = await response.json().catch(() => { throw new Error("BARCODE_API_INVALID_JSON"); });
+    if (payload?.status !== 1 || !payload?.product) throw new Error("BARCODE_PRODUCT_NOT_FOUND");
+    const item = payload.product;
+    const name = String(item.product_name || item.product_name_en || item.generic_name || "").trim();
+    if (!name) throw new Error("BARCODE_PRODUCT_NAME_MISSING");
+    const brand = String(item.brands || "").trim();
+    const category = String(item.categories || "").split(",").map((value: string) => value.trim()).filter(Boolean)[0] || "";
+    const product: Record<string, unknown> = {
+      name: brand && !name.toLowerCase().includes(brand.toLowerCase()) ? `${name} - ${brand}` : name,
+      externalId: barcode,
+      sku: barcode,
+      description: String(item.generic_name || item.ingredients_text || "").trim(),
+      category,
+      imageUrl: item.image_front_url || item.image_url || undefined,
+      productUrl: `https://world.openfoodfacts.org/product/${barcode}`,
+      source: "MANUAL",
+      sourceType: "MANUAL",
+      rawData: item,
+    };
+    await createProduct(tenantId, product);
+    return { imported: 1, source: "BARCODE", total: 1, product: product.name };
+  } else if (input.mode === "api") {
     const url = await assertPublicHttpsUrl(input.url);
     const headers: Record<string, string> = { Accept: "application/json" };
     const token = typeof input.token === "string" ? input.token.trim() : "";
