@@ -1,5 +1,9 @@
 import axios from "axios";
+import { randomUUID } from "crypto";
 import AgentChannel from "../../models/AgentChannel";
+import Customer from "../../models/Customer";
+import Conversation from "../../models/Conversation";
+import { chatWithAI } from "../ai/ai.service";
 
 interface TelegramApiResponse<T = any> {
   ok: boolean;
@@ -82,10 +86,11 @@ async function telegramRequest<T = any>(
 */
 
 function getApiBaseUrl(): string {
+  // PUBLIC_API_URL may be configured either as the origin or with /api/v1.
   return (
     process.env.PUBLIC_API_URL ||
-    "http://localhost:3000/api/v1"
-  ).replace(/\/+$/, "");
+    "http://localhost:3000"
+  ).replace(/\/+$/, "").replace(/\/api\/v1$/i, "");
 }
 
 function getWebhookUrl(
@@ -636,81 +641,114 @@ export async function handleTelegramWebhook(
   channelId: string,
   update: TelegramUpdate
 ) {
-  if (!channelId) {
-    throw new Error(
-      "TELEGRAM_CHANNEL_ID_REQUIRED"
-    );
+  if (!channelId?.trim()) {
+    throw new Error("TELEGRAM_CHANNEL_ID_REQUIRED");
   }
 
   if (!update) {
-    throw new Error(
-      "TELEGRAM_UPDATE_REQUIRED"
-    );
+    throw new Error("TELEGRAM_UPDATE_REQUIRED");
   }
 
-  if (!update.message) {
+  const message = update.message;
+  if (!message?.text?.trim() || !message.from || message.from.is_bot) {
     return {
       success: true,
       ignored: true,
-      reason:
-        "NO_MESSAGE",
+      reason: !message ? "NO_MESSAGE" : "NON_TEXT_OR_BOT_MESSAGE",
     };
   }
 
-  const message =
-    update.message;
+  // Resolve the exact tenant/channel from the webhook path. Never route a
+  // Telegram update by tenant alone: every bot must stay isolated.
+  const channel = await AgentChannel.findOne({
+    where: {
+      id: channelId,
+      type: "TELEGRAM",
+      isActive: true,
+    },
+  });
 
-  if (!message.text?.trim()) {
+  if (!channel) {
     return {
       success: true,
       ignored: true,
-      reason:
-        "NON_TEXT_MESSAGE",
+      reason: "CHANNEL_NOT_FOUND_OR_INACTIVE",
     };
   }
+
+  const botToken = getBotTokenFromChannel(channel);
+  const sender = message.from;
+  const externalCustomerId = `telegram:${channel.id}:${sender.id}`;
+
+  let customer = await Customer.findOne({
+    where: {
+      tenantId: channel.tenantId,
+      telegramId: externalCustomerId,
+    },
+  });
+
+  const customerData = {
+    username: sender.username || null,
+    firstName: sender.first_name || null,
+    lastName: sender.last_name || null,
+  };
+
+  if (!customer) {
+    customer = await Customer.create({
+      id: randomUUID(),
+      tenantId: channel.tenantId,
+      telegramId: externalCustomerId,
+      ...customerData,
+      phone: null,
+      email: null,
+      referralCode: randomUUID(),
+      referredBy: null,
+      isActive: true,
+    });
+  } else {
+    await customer.update(customerData);
+  }
+
+  let conversation = await Conversation.findOne({
+    where: {
+      tenantId: channel.tenantId,
+      customerId: customer.id,
+      channel: "TELEGRAM",
+      status: "OPEN",
+    },
+    order: [["createdAt", "DESC"]],
+  });
+
+  if (!conversation) {
+    conversation = await Conversation.create({
+      id: randomUUID(),
+      tenantId: channel.tenantId,
+      customerId: customer.id,
+      channel: "TELEGRAM",
+      status: "OPEN",
+    });
+  }
+
+  // This is the same AI pipeline used by website chat: agent instructions,
+  // knowledge base, product tools, customer memory, lead scoring and CRM.
+  const aiResult = await chatWithAI({
+    tenantId: channel.tenantId,
+    conversationId: conversation.id,
+    userMessage: message.text.trim(),
+  });
+
+  await sendTelegramMessage(
+    botToken,
+    message.chat.id,
+    aiResult.aiMessage.content
+  );
 
   return {
     success: true,
-
     ignored: false,
-
-    channelId,
-
-    updateId:
-      update.update_id,
-
-    telegram: {
-      messageId:
-        message.message_id,
-
-      chatId:
-        message.chat.id,
-
-      text:
-        message.text.trim(),
-
-      user:
-        message.from
-          ? {
-              id:
-                message.from.id,
-
-              username:
-                message.from
-                  .username ||
-                null,
-
-              firstName:
-                message.from
-                  .first_name ||
-                null,
-
-              lastName:
-                message.from
-                  .last_name ||
-                null,
-            }
-          : null,
-    },
+    channelId: channel.id,
+    conversationId: conversation.id,
+    customerId: customer.id,
+    updateId: update.update_id,
   };
 }
