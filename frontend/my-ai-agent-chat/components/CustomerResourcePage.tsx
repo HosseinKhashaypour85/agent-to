@@ -104,8 +104,16 @@ export default function CustomerResourcePage({ title, description, endpoint, col
           <h1 className="text-2xl font-black">{title}</h1>
           <p className="mt-2 text-sm text-[#7D8D89]">{description}</p>
         </div>
+        {collection === "channels" && (
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#10706B] px-4 py-3 text-sm font-bold text-white hover:bg-[#0B5B57]"
+          >
+            <Plus size={16} /> افزودن کانال
+          </button>
+        )}
         <button
-          onClick={() => void load()}
+          onClick={() => void load()
           disabled={loading}
           className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-3 text-sm font-bold disabled:opacity-50"
         >
