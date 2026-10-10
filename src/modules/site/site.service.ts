@@ -12,41 +12,18 @@ export async function createSite(data: {
   domain: string;
   name: string;
 }) {
-  const now = new Date();
-
-  const activeSubscription = await Subscription.findOne({
+  // A site and its Site ID must be assigned by a super admin while
+  // creating the subscription. Customer requests may only resolve that site.
+  const site = await Site.findOne({
     where: {
       tenantId: data.tenantId,
-      status: "ACTIVE",
-      startsAt: { [Op.lte]: now },
-      expiresAt: { [Op.gt]: now },
+      domain: data.domain.trim().toLowerCase(),
     },
   });
 
-  if (!activeSubscription) {
-    throw new Error("SUBSCRIPTION_REQUIRED");
+  if (!site) {
+    throw new Error("SITE_NOT_ASSIGNED_BY_ADMIN");
   }
-
-  // Site IDs are generated centrally; customers must not invent or reuse them.
-  let siteId = generateSiteId();
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const existingSite = await Site.findOne({ where: { siteId } });
-    if (!existingSite) break;
-    siteId = generateSiteId();
-  }
-
-  const finalCollision = await Site.findOne({ where: { siteId } });
-  if (finalCollision) {
-    throw new Error("SITE_ID_GENERATION_FAILED");
-  }
-
-  const site = await Site.create({
-    tenantId: data.tenantId,
-    siteId,
-    domain: data.domain,
-    name: data.name,
-    status: "INSTALLING",
-  });
 
   return site;
 }
