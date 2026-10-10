@@ -92,7 +92,9 @@ export async function createSubscription(data: {
       site,
     };
   } catch (error) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     throw error;
   }
 }
