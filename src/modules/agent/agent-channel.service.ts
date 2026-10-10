@@ -12,6 +12,19 @@ const CHANNEL_NAMES: Record<ChannelType, string> = {
   WHATSAPP: "WhatsApp",
 };
 
+function toSafeChannel(channel: AgentChannel) {
+  const config = (channel.config as Record<string, unknown> | null) || {};
+  const { botToken, ...safeConfig } = config;
+
+  return {
+    ...channel.toJSON(),
+    config: {
+      ...safeConfig,
+      ...(botToken ? { hasBotToken: true } : {}),
+    },
+  };
+}
+
 export async function getChannels(
   tenantId: string
 ) {
@@ -32,18 +45,7 @@ export async function getChannels(
   });
 
   // Never expose the Telegram bot token through the generic channels API.
-  return channels.map((channel) => {
-    const config = (channel.config as Record<string, unknown> | null) || {};
-    const { botToken, ...safeConfig } = config;
-
-    return {
-      ...channel.toJSON(),
-      config: {
-        ...safeConfig,
-        ...(botToken ? { hasBotToken: true } : {}),
-      },
-    };
-  });
+  return channels.map(toSafeChannel);
 }
 
 export async function createChannel(
@@ -140,7 +142,7 @@ export async function updateChannel(
 
   await channel.update(updateData);
 
-  return channel;
+  return toSafeChannel(channel);
 }
 
 export async function toggleChannel(
@@ -163,7 +165,7 @@ export async function toggleChannel(
     isActive,
   });
 
-  return channel;
+  return toSafeChannel(channel);
 }
 
 function isValidChannelType(
