@@ -18,6 +18,11 @@ export async function importProductsController(req: AuthRequest, res: Response) 
     const message = typeof error?.message === "string" ? error.message : "PRODUCT_IMPORT_FAILED";
     const clientErrors: Record<string, string> = {
       API_URL_REQUIRED: "آدرس API را وارد کنید.",
+      INVALID_BARCODE: "بارکد باید یک عدد ۸ تا ۱۴ رقمی باشد.",
+      BARCODE_ALREADY_EXISTS: "این بارکد قبلاً در کاتالوگ شما ثبت شده است.",
+      BARCODE_PRODUCT_NOT_FOUND: "محصولی با این بارکد در پایگاه اطلاعاتی پیدا نشد. این سرویس پوشش همه کالاها را ندارد.",
+      BARCODE_PRODUCT_NAME_MISSING: "برای این بارکد نام محصول ثبت نشده است.",
+      BARCODE_API_INVALID_JSON: "پاسخ سرویس بارکد معتبر نیست.",
       INVALID_API_URL: "آدرس API معتبر نیست.",
       API_URL_MUST_USE_HTTPS: "آدرس منبع باید با HTTPS شروع شود.",
       API_URL_NOT_PUBLIC: "آدرس API باید یک دامنه عمومی باشد.",
@@ -34,6 +39,10 @@ export async function importProductsController(req: AuthRequest, res: Response) 
     }
     if (clientErrors[message]) {
       return res.status(400).json({ success: false, message: clientErrors[message] });
+    }
+    if (message.startsWith("BARCODE_API_HTTP_")) {
+      const status = Number(message.replace("BARCODE_API_HTTP_", ""));
+      return res.status(502).json({ success: false, message: `سرویس جست‌وجوی بارکد با وضعیت ${status} پاسخ داد.` });
     }
     if (message.startsWith("SOURCE_API_HTTP_")) {
       const status = Number(message.replace("SOURCE_API_HTTP_", ""));
