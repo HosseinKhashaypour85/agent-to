@@ -45,6 +45,7 @@ type Subscription = {
   status: Status;
   startsAt: string;
   expiresAt: string;
+  siteId?: string | null;
   cancelledAt?: string | null;
   createdAt?: string;
   tenant?: Business;
@@ -57,6 +58,9 @@ type FormState = {
   status: Status;
   startsAt: string;
   expiresAt: string;
+  siteId: string;
+  siteName: string;
+  domain: string;
 };
 
 const emptyForm: FormState = {
@@ -65,6 +69,9 @@ const emptyForm: FormState = {
   status: "ACTIVE",
   startsAt: "",
   expiresAt: "",
+  siteId: "",
+  siteName: "",
+  domain: "",
 };
 
 const statusLabels: Record<Status, string> = {
@@ -89,6 +96,13 @@ function toDateInput(value?: string) {
     date.getTime() - date.getTimezoneOffset() * 60000
   );
   return local.toISOString().slice(0, 16);
+}
+
+function generateSuggestedSiteId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `AT-${crypto.randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase()}`;
+  }
+  return `AT-${Math.random().toString(36).slice(2, 14).toUpperCase()}`;
 }
 
 function formatDate(value?: string) {
@@ -178,6 +192,9 @@ export default function Subscriptions() {
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       ),
       status: "ACTIVE",
+      siteId: generateSuggestedSiteId(),
+      siteName: businesses[0]?.name || "",
+      domain: "",
     });
     setError("");
     setNotice("");
@@ -192,6 +209,9 @@ export default function Subscriptions() {
       status: item.status,
       startsAt: toDateInput(item.startsAt),
       expiresAt: toDateInput(item.expiresAt),
+      siteId: item.siteId || "",
+      siteName: "",
+      domain: "",
     });
     setError("");
     setNotice("");
@@ -220,6 +240,16 @@ export default function Subscriptions() {
       return;
     }
 
+    if (!editing && (!form.siteId.trim() || !form.siteName.trim() || !form.domain.trim())) {
+      setError("شناسه سایت، نام سایت و دامنه الزامی است.");
+      return;
+    }
+
+    if (!editing && !/^[A-Za-z0-9][A-Za-z0-9_-]{2,49}$/.test(form.siteId.trim())) {
+      setError("Site ID باید ۳ تا ۵۰ کاراکتر انگلیسی، عدد، خط تیره یا زیرخط باشد.");
+      return;
+    }
+
     if (!form.startsAt || !form.expiresAt) {
       setError("تاریخ شروع و پایان الزامی است.");
       return;
@@ -238,6 +268,11 @@ export default function Subscriptions() {
         status: form.status,
         startsAt: new Date(form.startsAt).toISOString(),
         expiresAt: new Date(form.expiresAt).toISOString(),
+        ...(editing ? {} : {
+          siteId: form.siteId.trim().toUpperCase(),
+          siteName: form.siteName.trim(),
+          domain: form.domain.trim(),
+        }),
       };
 
       if (editing) {
@@ -300,7 +335,8 @@ export default function Subscriptions() {
       !query ||
       businessName.toLowerCase().includes(query) ||
       planName.toLowerCase().includes(query) ||
-      item.id.toLowerCase().includes(query);
+      item.id.toLowerCase().includes(query) ||
+      (item.siteId || "").toLowerCase().includes(query);
 
     const matchesStatus =
       filterStatus === "ALL" || item.status === filterStatus;
@@ -494,6 +530,7 @@ export default function Subscriptions() {
               <thead className="bg-slate-50 text-xs text-slate-500">
                 <tr>
                   <th className="px-5 py-4 font-semibold">کسب‌وکار</th>
+                  <th className="px-5 py-4 font-semibold">Site ID</th>
                   <th className="px-5 py-4 font-semibold">پلن</th>
                   <th className="px-5 py-4 font-semibold">مبلغ پلن</th>
                   <th className="px-5 py-4 font-semibold">شروع</th>
@@ -518,6 +555,11 @@ export default function Subscriptions() {
                             {item.tenant?.email || item.tenantId}
                           </div>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="font-mono text-xs font-bold text-[#10706B]">
+                        {item.siteId || "—"}
                       </div>
                     </td>
                     <td className="px-5 py-4">
@@ -646,6 +688,63 @@ export default function Subscriptions() {
                     </span>
                   )}
                 </label>
+
+                {!editing && (
+                  <>
+                    <label className="block md:col-span-2">
+                      <span className="mb-2 block text-sm font-bold text-slate-700">
+                        Site ID *
+                      </span>
+                      <div className="flex gap-2">
+                        <input
+                          required
+                          value={form.siteId}
+                          onChange={(e) => updateField("siteId", e.target.value.toUpperCase())}
+                          placeholder="AT-XXXXXXXXXXXX"
+                          maxLength={50}
+                          className="h-12 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 font-mono text-sm outline-none focus:border-emerald-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateField("siteId", generateSuggestedSiteId())}
+                          className="h-12 shrink-0 rounded-xl border border-[#DDEFEA] bg-[#E8F5F3] px-3 text-sm font-bold text-[#10706B] hover:bg-[#DDEFEA]"
+                        >
+                          تولید شناسه
+                        </button>
+                      </div>
+                      <span className="mt-1 block text-xs text-slate-400">
+                        شناسه را سوپرادمین تعیین می‌کند و مشتری آن را تغییر نمی‌دهد.
+                      </span>
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-bold text-slate-700">
+                        نام سایت *
+                      </span>
+                      <input
+                        required
+                        value={form.siteName}
+                        onChange={(e) => updateField("siteName", e.target.value)}
+                        placeholder="مثلاً فروشگاه من"
+                        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-600"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-bold text-slate-700">
+                        دامنه سایت *
+                      </span>
+                      <input
+                        required
+                        type="text"
+                        value={form.domain}
+                        onChange={(e) => updateField("domain", e.target.value)}
+                        placeholder="example.com"
+                        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-600"
+                      />
+                    </label>
+                  </>
+                )}
 
                 <label className="block">
                   <span className="mb-2 block text-sm font-bold text-slate-700">
