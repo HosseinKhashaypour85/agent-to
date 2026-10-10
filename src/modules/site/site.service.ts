@@ -1,10 +1,6 @@
 import { Op } from "sequelize";
 import Site from "../../models/Site";
 
-function generateSiteId(): string {
-  return `AT-${randomBytes(6).toString("hex").toUpperCase()}`;
-}
-
 export async function createSite(data: {
   tenantId: string;
   domain: string;
