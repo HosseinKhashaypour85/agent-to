@@ -113,7 +113,7 @@ export default function CustomerResourcePage({ title, description, endpoint, col
           </button>
         )}
         <button
-          onClick={() => void load()
+          onClick={() => void load()}
           disabled={loading}
           className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-3 text-sm font-bold disabled:opacity-50"
         >
