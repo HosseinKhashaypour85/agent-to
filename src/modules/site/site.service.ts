@@ -1,7 +1,5 @@
-import { randomBytes } from "crypto";
 import { Op } from "sequelize";
 import Site from "../../models/Site";
-import Subscription from "../../models/Subscription";
 
 function generateSiteId(): string {
   return `AT-${randomBytes(6).toString("hex").toUpperCase()}`;
