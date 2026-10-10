@@ -13,13 +13,7 @@ import {
   validateInstallationToken,
 } from "./installation.service";
 
-
-
-
-export async function create(
-  req: AuthRequest,
-  res: Response
-) {
+export async function create(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -28,24 +22,24 @@ export async function create(
       });
     }
 
-    const {
-      siteId,
-      domain,
-      name,
-    } = req.body || {};
+    const { domain, name } = req.body || {};
 
-    if (!siteId || !domain || !name) {
+    if (
+      typeof domain !== "string" ||
+      !domain.trim() ||
+      typeof name !== "string" ||
+      !name.trim()
+    ) {
       return res.status(400).json({
         success: false,
-        message: "siteId, domain and name are required",
+        message: "domain and name are required",
       });
     }
 
     const site = await createSite({
       tenantId: req.user.tenantId,
-      siteId,
-      domain,
-      name,
+      domain: domain.trim(),
+      name: name.trim(),
     });
 
     return res.status(201).json({
@@ -53,16 +47,23 @@ export async function create(
       message: "Site created successfully",
       data: site,
     });
-
   } catch (error: any) {
-    if (error.message === "SITE_ID_ALREADY_EXISTS") {
-      return res.status(409).json({
+    if (error?.message === "SUBSCRIPTION_REQUIRED") {
+      return res.status(402).json({
         success: false,
-        message: "Site ID already exists",
+        code: "SUBSCRIPTION_REQUIRED",
+        message: "An active subscription is required before creating a site",
       });
     }
 
-    console.error(error);
+    if (error?.message === "SITE_ID_GENERATION_FAILED") {
+      return res.status(503).json({
+        success: false,
+        message: "Could not generate a unique Site ID. Please try again.",
+      });
+    }
+
+    console.error("CREATE SITE ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -71,10 +72,7 @@ export async function create(
   }
 }
 
-export async function list(
-  req: AuthRequest,
-  res: Response
-) {
+export async function list(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -89,9 +87,8 @@ export async function list(
       success: true,
       data: sites,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("LIST SITES ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -100,10 +97,7 @@ export async function list(
   }
 }
 
-export async function getSiteById(
-  req: AuthRequest,
-  res: Response
-) {
+export async function getSiteById(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -113,23 +107,21 @@ export async function getSiteById(
     }
 
     const idOrSiteId = String(req.params.id);
-
     const site = await getSite(idOrSiteId, req.user.tenantId);
 
     return res.status(200).json({
       success: true,
       data: site,
     });
-
   } catch (error: any) {
-    if (error.message === "SITE_NOT_FOUND") {
+    if (error?.message === "SITE_NOT_FOUND") {
       return res.status(404).json({
         success: false,
         message: "Site not found",
       });
     }
 
-    console.error(error);
+    console.error("GET SITE ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -138,10 +130,7 @@ export async function getSiteById(
   }
 }
 
-export async function createInstallToken(
-  req: AuthRequest,
-  res: Response
-) {
+export async function createInstallToken(req: AuthRequest, res: Response) {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -151,27 +140,22 @@ export async function createInstallToken(
     }
 
     const id = String(req.params.id);
-
-    const result = await createInstallationToken(
-      id,
-      req.user.tenantId
-    );
+    const result = await createInstallationToken(id, req.user.tenantId);
 
     return res.status(201).json({
       success: true,
       message: "Installation token created successfully",
       data: result,
     });
-
   } catch (error: any) {
-    if (error.message === "SITE_NOT_FOUND") {
+    if (error?.message === "SITE_NOT_FOUND") {
       return res.status(404).json({
         success: false,
         message: "Site not found",
       });
     }
 
-    console.error(error);
+    console.error("CREATE INSTALL TOKEN ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -180,10 +164,7 @@ export async function createInstallToken(
   }
 }
 
-export async function install(
-  req: Request,
-  res: Response
-) {
+export async function install(req: Request, res: Response) {
   try {
     const { token } = req.body || {};
 
@@ -208,34 +189,28 @@ export async function install(
           success: false,
           message: "Installation token is required",
         });
-
       case "INVALID_INSTALLATION_TOKEN":
         return res.status(401).json({
           success: false,
           message: "Invalid installation token",
         });
-
       case "INSTALLATION_TOKEN_ALREADY_USED":
         return res.status(409).json({
           success: false,
           message: "Installation token has already been used",
         });
-
       case "INSTALLATION_TOKEN_EXPIRED":
         return res.status(410).json({
           success: false,
           message: "Installation token has expired",
         });
-
       case "SITE_NOT_FOUND":
         return res.status(404).json({
           success: false,
           message: "Site not found",
         });
-
       default:
-        console.error(error);
-
+        console.error("INSTALL SITE ERROR:", error);
         return res.status(500).json({
           success: false,
           message: "Internal server error",
@@ -244,25 +219,17 @@ export async function install(
   }
 }
 
-export async function getInstallScript(
-  req: Request,
-  res: Response
-) {
+export async function getInstallScript(req: Request, res: Response) {
   try {
     const token = String(req.query.token || "");
 
     if (!token) {
-      return res.status(400).send(
-        "Installation token is required"
-      );
+      return res.status(400).send("Installation token is required");
     }
 
     const result = await validateInstallationToken(token);
-
     const site = result.site;
-
-    const apiUrl =
-      process.env.PUBLIC_API_URL || "http://localhost:3000";
+    const apiUrl = process.env.PUBLIC_API_URL || "http://localhost:3000";
 
     const script = `#!/usr/bin/env bash
 
@@ -308,44 +275,22 @@ echo "AI Agent installation completed."
 echo "======================================"
 `;
 
-    res
-      .status(200)
-      .type("text/plain")
-      .send(script);
-
+    return res.status(200).type("text/plain").send(script);
   } catch (error: any) {
     switch (error.message) {
       case "TOKEN_REQUIRED":
-        return res.status(400).send(
-          "Installation token is required"
-        );
-
+        return res.status(400).send("Installation token is required");
       case "INVALID_INSTALLATION_TOKEN":
-        return res.status(401).send(
-          "Invalid installation token"
-        );
-
+        return res.status(401).send("Invalid installation token");
       case "INSTALLATION_TOKEN_ALREADY_USED":
-        return res.status(409).send(
-          "Installation token has already been used"
-        );
-
+        return res.status(409).send("Installation token has already been used");
       case "INSTALLATION_TOKEN_EXPIRED":
-        return res.status(410).send(
-          "Installation token has expired"
-        );
-
+        return res.status(410).send("Installation token has expired");
       case "SITE_NOT_FOUND":
-        return res.status(404).send(
-          "Site not found"
-        );
-
+        return res.status(404).send("Site not found");
       default:
-        console.error(error);
-
-        return res.status(500).send(
-          "Internal server error"
-        );
+        console.error("GET INSTALL SCRIPT ERROR:", error);
+        return res.status(500).send("Internal server error");
     }
   }
 }
