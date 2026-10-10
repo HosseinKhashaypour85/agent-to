@@ -258,6 +258,14 @@ export async function processChat(
     message:
       aiResult.aiMessage.content,
 
+    products: (() => {
+      const result = aiResult.toolResult;
+      if (result.products?.length) {
+        return result.products;
+      }
+      return result.product ? [result.product] : [];
+    })(),
+
     intent:
       aiResult.intent.intent,
   };

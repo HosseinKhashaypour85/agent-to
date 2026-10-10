@@ -90,11 +90,37 @@ type ConfigResponse = {
   settings: ChatSettings;
 };
 
+type ProductCard = {
+  id: string;
+  name: string;
+  description?: string | null;
+  price?: number | string | null;
+  currency?: string | null;
+  stock?: number | null;
+  stockStatus?: string | null;
+  imageUrl?: string | null;
+  productUrl?: string | null;
+};
+
 type Message = {
   id: string;
   sender: "USER" | "AI";
   content: string;
+  products?: ProductCard[];
 };
+
+function safeHttpUrl(value?: string | null): string | null {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 /* ======================================================
    Page
@@ -343,6 +369,9 @@ export default function AIAgentPage() {
           id: `${Date.now()}-ai`,
           sender: "AI",
           content: data.message,
+          products: Array.isArray(data.products)
+            ? data.products
+            : [],
         },
       ]);
     } catch (err) {
@@ -774,7 +803,85 @@ export default function AIAgentPage() {
                                 }
                           }
                         >
-                          {item.content}
+                          <div>{item.content}</div>
+
+                          {!isUser && item.products && item.products.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              {item.products.map((product) => {
+                                const imageUrl = safeHttpUrl(product.imageUrl);
+                                const productUrl = safeHttpUrl(product.productUrl);
+                                const productCard = (
+                                  <div
+                                    className="flex items-center gap-3 rounded-xl border p-2.5"
+                                    style={{
+                                      backgroundColor: settings.surfaceColor,
+                                      borderColor: settings.borderColor,
+                                      color: settings.textColor,
+                                    }}
+                                  >
+                                    <div className="w-20 h-20 shrink-0 overflow-hidden rounded-lg flex items-center justify-center"
+                                      style={{ backgroundColor: settings.backgroundColor }}>
+                                      {imageUrl ? (
+                                        <img
+                                          src={imageUrl}
+                                          alt={product.name}
+                                          loading="lazy"
+                                          referrerPolicy="no-referrer"
+                                          className="w-full h-full object-contain"
+                                          onError={(event) => {
+                                            event.currentTarget.style.display = "none";
+                                          }}
+                                        />
+                                      ) : (
+                                        <MessageCircle size={22} style={{ color: mutedText }} />
+                                      )}
+                                    </div>
+
+                                    <div className="min-w-0 flex-1">
+                                      <p className="font-semibold text-sm leading-6 line-clamp-2">
+                                        {product.name}
+                                      </p>
+                                      {product.price !== null && product.price !== undefined && (
+                                        <p className="mt-1 text-sm font-bold" style={{ color: settings.primaryColor }}>
+                                          {Number(product.price).toLocaleString("fa-IR")} {product.currency || ""}
+                                        </p>
+                                      )}
+                                      {product.stockStatus && (
+                                        <p className="mt-1 text-xs" style={{ color: mutedText }}>
+                                          {product.stockStatus === "IN_STOCK"
+                                            ? "موجود"
+                                            : product.stockStatus === "OUT_OF_STOCK"
+                                              ? "ناموجود"
+                                              : product.stockStatus === "LOW_STOCK"
+                                                ? "موجودی محدود"
+                                                : "وضعیت موجودی نامشخص"}
+                                        </p>
+                                      )}
+                                      {productUrl && (
+                                        <span className="mt-1 inline-block text-xs font-medium" style={{ color: settings.primaryColor }}>
+                                          مشاهده محصول
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+
+                                return productUrl ? (
+                                  <a
+                                    key={product.id}
+                                    href={productUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block rounded-xl transition-opacity hover:opacity-90"
+                                  >
+                                    {productCard}
+                                  </a>
+                                ) : (
+                                  <div key={product.id}>{productCard}</div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
 
                       </div>
