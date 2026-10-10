@@ -56,10 +56,11 @@ export async function create(req: AuthRequest, res: Response) {
       });
     }
 
-    if (error?.message === "SITE_ID_GENERATION_FAILED") {
-      return res.status(503).json({
+    if (error?.message === "SITE_NOT_ASSIGNED_BY_ADMIN") {
+      return res.status(403).json({
         success: false,
-        message: "Could not generate a unique Site ID. Please try again.",
+        code: "SITE_NOT_ASSIGNED_BY_ADMIN",
+        message: "A site must be assigned by the super admin when the subscription is created.",
       });
     }
 
