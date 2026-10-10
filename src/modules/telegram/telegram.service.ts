@@ -281,7 +281,7 @@ export async function connectTelegramBot(
       },
     });
 
-  if (!channel) {
+  if (!channel || channel.type !== "TELEGRAM") {
     throw new Error(
       "TELEGRAM_CHANNEL_NOT_FOUND"
     );
