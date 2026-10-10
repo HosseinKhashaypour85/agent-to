@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { api, clearCustomerSession } from "@/lib/api";
-import { LayoutDashboard, Bot, Radio, Package, Database, Sparkles, MessagesSquare, Users, UserRoundSearch, CreditCard, LifeBuoy, Settings, Palette, Bell, Menu, X, Search, ChevronLeft, Zap, LogOut, LoaderCircle } from "lucide-react";
+import { LayoutDashboard, Bot, Radio, Package, Database, Sparkles, MessagesSquare, Users, UserRoundSearch, CreditCard, LifeBuoy, Settings, Palette, Bell, Menu, X, Search, ChevronLeft, Zap, LogOut, LoaderCircle, Send } from "lucide-react";
 
 const nav = [
   { title: "نمای کلی", items: [
@@ -12,6 +12,7 @@ const nav = [
     { label: "ایجنت‌های هوشمند", href: "/customer-agents", icon: Bot },
     { label: "کانال‌ها", href: "/customer-channels", icon: Radio },
     { label: "ظاهر صفحه چت", href: "/customer-chat-settings", icon: Palette },
+    { label: "ربات تلگرام", href: "/customer-telegram", icon: Send },
   ]},
   { title: "هوش محصول", items: [
     { label: "منابع محصولات", href: "/product-sources", icon: Database },
