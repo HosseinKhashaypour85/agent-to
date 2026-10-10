@@ -526,7 +526,7 @@ export default function Subscriptions() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px] text-right text-sm">
+            <table className="w-full min-w-[1000px] text-right text-sm">
               <thead className="bg-slate-50 text-xs text-slate-500">
                 <tr>
                   <th className="px-5 py-4 font-semibold">کسب‌وکار</th>
@@ -672,7 +672,15 @@ export default function Subscriptions() {
                     required
                     value={form.tenantId}
                     disabled={Boolean(editing)}
-                    onChange={(e) => updateField("tenantId", e.target.value)}
+                    onChange={(e) => {
+                      const tenantId = e.target.value;
+                      const selectedBusiness = businesses.find((business) => business.id === tenantId);
+                      setForm((current) => ({
+                        ...current,
+                        tenantId,
+                        siteName: selectedBusiness?.name || current.siteName,
+                      }));
+                    }}
                     className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-600 disabled:bg-slate-100"
                   >
                     <option value="">انتخاب کسب‌وکار</option>
