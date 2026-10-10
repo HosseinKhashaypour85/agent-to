@@ -164,6 +164,86 @@ export default function CustomerResourcePage({ title, description, endpoint, col
           </table>
         </div>
       )}
+
+      {collection === "channels" && createOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!creating) void createChannel();
+            }}
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+            dir="rtl"
+          >
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-black">افزودن کانال جدید</h2>
+              <button
+                type="button"
+                onClick={() => setCreateOpen(false)}
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                aria-label="بستن"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <label className="mb-2 block text-sm font-bold">نوع کانال</label>
+            <select
+              value={channelType}
+              onChange={(event) => {
+                const type = event.target.value;
+                setChannelType(type);
+                setChannelName(
+                  type === "WEBSITE" ? "Website" :
+                  type === "WORDPRESS" ? "WordPress" :
+                  type === "TELEGRAM" ? "Telegram" : "WhatsApp"
+                );
+              }}
+              className="mb-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-[#10706B]"
+            >
+              <option value="WEBSITE">وب‌سایت (Website)</option>
+              <option value="WORDPRESS">وردپرس (WordPress)</option>
+              <option value="TELEGRAM">تلگرام (Telegram)</option>
+              <option value="WHATSAPP">واتساپ (WhatsApp)</option>
+            </select>
+
+            <label className="mb-2 block text-sm font-bold">نام کانال</label>
+            <input
+              value={channelName}
+              onChange={(event) => setChannelName(event.target.value)}
+              placeholder="مثلاً وب‌سایت فروشگاه"
+              className="mb-4 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-[#10706B]"
+            />
+
+            <label className="mb-6 flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={channelActive}
+                onChange={(event) => setChannelActive(event.target.checked)}
+                className="h-4 w-4 accent-[#10706B]"
+              />
+              کانال فعال باشد
+            </label>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setCreateOpen(false)}
+                className="flex-1 rounded-xl border px-4 py-3 text-sm font-bold"
+              >
+                انصراف
+              </button>
+              <button
+                type="submit"
+                disabled={creating}
+                className="flex-1 rounded-xl bg-[#10706B] px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+              >
+                {creating ? "در حال ساخت..." : "ساخت کانال"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </CustomerShell>
   );
 }
