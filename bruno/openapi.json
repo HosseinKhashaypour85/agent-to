@@ -4321,7 +4321,17 @@
             "description": "Internal server error"
           }
         },
-        "security": []
+        "security": [],
+        "servers": [
+          {
+            "url": "https://agent-to.darkube.ir",
+            "description": "Production (root-mounted installer endpoint)"
+          },
+          {
+            "url": "http://localhost:3000",
+            "description": "Local development (root-mounted installer endpoint)"
+          }
+        ]
       }
     },
     "/admin/auth/login": {
