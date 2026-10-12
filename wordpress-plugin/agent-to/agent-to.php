@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.0.0';
+    const VERSION = '2.1.0';
     const DEFAULT_API = 'https://agent-to.darkube.ir/api/v1';
 
     public function __construct() {
@@ -40,6 +40,7 @@ final class Agent_To_WordPress_Plugin {
             'welcome_message' => 'سلام! چطور می‌توانم کمکتان کنم؟',
             'primary_color' => '#10706B',
             'enabled' => '1',
+            'auto_detect_products' => '1',
         );
     }
 
@@ -77,6 +78,7 @@ final class Agent_To_WordPress_Plugin {
             'welcome_message' => isset($input['welcome_message']) ? sanitize_textarea_field($input['welcome_message']) : $old['welcome_message'],
             'primary_color' => $color ? $color : '#10706B',
             'enabled' => !empty($input['enabled']) ? '1' : '0',
+            'auto_detect_products' => !empty($input['auto_detect_products']) ? '1' : '0',
         );
     }
 
@@ -125,6 +127,8 @@ final class Agent_To_WordPress_Plugin {
                 <tr><th scope="row"><label for="agent-to-welcome">پیام خوشامد</label></th><td><textarea id="agent-to-welcome" name="<?php echo esc_attr(self::OPTION); ?>[welcome_message]" rows="3" class="large-text"><?php echo esc_textarea($s['welcome_message']); ?></textarea></td></tr>
                 <tr><th scope="row"><label for="agent-to-color">رنگ اصلی</label></th><td><input id="agent-to-color" name="<?php echo esc_attr(self::OPTION); ?>[primary_color]" type="color" value="<?php echo esc_attr($s['primary_color']); ?>"></td></tr>
                 <tr><th scope="row">ویجت شناور</th><td><label><input name="<?php echo esc_attr(self::OPTION); ?>[enabled]" type="checkbox" value="1" <?php checked($s['enabled'], '1'); ?>> نمایش چت در گوشه سایت</label></td></tr>
+                <tr><th scope="row">تشخیص خودکار محصولات</th><td><label><input name="<?php echo esc_attr(self::OPTION); ?>[auto_detect_products]" type="checkbox" value="1" <?php checked($s['auto_detect_products'], '1'); ?>> شناسایی محصولات فروشگاه برای استفاده در دستیار</label><p class="description">ووکامرس به‌صورت مستقیم پشتیبانی می‌شود؛ برای افزونه‌های دیگر، نوع نوشته عمومی محصول و فیلدهای استاندارد قابل تشخیص بررسی می‌شود.</p>
+                <p><strong>منابع شناسایی‌شده:</strong> <?php echo esc_html(implode('، ', $this->detected_product_sources())); ?></p></td></tr>
               </table>
               <?php submit_button('ذخیره تنظیمات'); ?>
             </form>
@@ -209,6 +213,120 @@ final class Agent_To_WordPress_Plugin {
             'methods' => 'POST',
             'callback' => array($this, 'proxy_chat'),
             'permission_callback' => '__return_true',
+        ));
+        register_rest_route(self::REST_NAMESPACE, '/products', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_detected_products'),
+            'permission_callback' => '__return_true',
+            'args' => array(
+                'page' => array('default' => 1, 'sanitize_callback' => 'absint'),
+                'per_page' => array('default' => 20, 'sanitize_callback' => 'absint'),
+            ),
+        ));
+    }
+
+    public function detected_product_sources() {
+        $sources = array();
+        if (class_exists('WooCommerce') && function_exists('wc_get_products')) {
+            $sources[] = 'WooCommerce';
+        }
+        if (function_exists('edd_get_download')) {
+            $sources[] = 'Easy Digital Downloads';
+        }
+        foreach (get_post_types(array('public' => true), 'objects') as $type) {
+            $name = strtolower($type->name);
+            $label = strtolower($type->labels->name ?? '');
+            if (($name === 'product' || strpos($name, 'product') !== false || strpos($label, 'product') !== false) && !in_array($type->name, array('product'), true)) {
+                $sources[] = $type->labels->name . ' (' . $type->name . ')';
+            }
+        }
+        if (!$sources) {
+            $sources[] = 'هیچ منبع محصولی شناسایی نشد';
+        }
+        return array_values(array_unique($sources));
+    }
+
+    public function get_detected_products(WP_REST_Request $request) {
+        $s = $this->settings();
+        if ($s['auto_detect_products'] !== '1') {
+            return new WP_Error('agent_to_product_detection_disabled', 'تشخیص خودکار محصولات غیرفعال است.', array('status' => 403));
+        }
+
+        $page = max(1, (int) $request->get_param('page'));
+        $per_page = min(100, max(1, (int) $request->get_param('per_page')));
+        $products = array();
+        $total = 0;
+
+        if (class_exists('WooCommerce') && function_exists('wc_get_products')) {
+            $result = wc_get_products(array(
+                'status' => 'publish',
+                'limit' => $per_page,
+                'page' => $page,
+                'paginate' => true,
+                'return' => 'objects',
+            ));
+            $total = isset($result->total) ? (int) $result->total : 0;
+            foreach (($result->products ?? array()) as $product) {
+                $products[] = array(
+                    'id' => (string) $product->get_id(),
+                    'name' => wp_strip_all_tags($product->get_name()),
+                    'sku' => (string) $product->get_sku(),
+                    'description' => wp_strip_all_tags($product->get_short_description() ?: $product->get_description()),
+                    'price' => $product->get_price() !== '' ? (float) $product->get_price() : null,
+                    'currency' => function_exists('get_woocommerce_currency') ? get_woocommerce_currency() : '',
+                    'stock_status' => $product->get_stock_status(),
+                    'url' => esc_url_raw(get_permalink($product->get_id())),
+                    'image' => esc_url_raw(wp_get_attachment_image_url($product->get_image_id(), 'full') ?: ''),
+                    'source' => 'woocommerce',
+                );
+            }
+        } else {
+            $types = array();
+            foreach (get_post_types(array('public' => true), 'objects') as $type) {
+                $name = strtolower($type->name);
+                $label = strtolower($type->labels->name ?? '');
+                if ($type->name !== 'product' && (strpos($name, 'product') !== false || strpos($label, 'product') !== false)) {
+                    $types[] = $type->name;
+                }
+            }
+            if ($types) {
+                $query = new WP_Query(array(
+                    'post_type' => $types,
+                    'post_status' => 'publish',
+                    'posts_per_page' => $per_page,
+                    'paged' => $page,
+                ));
+                $total = (int) $query->found_posts;
+                foreach ($query->posts as $post) {
+                    $price = get_post_meta($post->ID, '_price', true);
+                    if ($price === '') $price = get_post_meta($post->ID, 'price', true);
+                    $sku = get_post_meta($post->ID, '_sku', true);
+                    if ($sku === '') $sku = get_post_meta($post->ID, 'sku', true);
+                    $stock = get_post_meta($post->ID, '_stock_status', true);
+                    $products[] = array(
+                        'id' => (string) $post->ID,
+                        'name' => get_the_title($post),
+                        'sku' => sanitize_text_field((string) $sku),
+                        'description' => wp_strip_all_tags($post->post_excerpt ?: $post->post_content),
+                        'price' => is_numeric($price) ? (float) $price : null,
+                        'currency' => '',
+                        'stock_status' => sanitize_text_field((string) $stock),
+                        'url' => esc_url_raw(get_permalink($post)),
+                        'image' => esc_url_raw(get_the_post_thumbnail_url($post, 'full') ?: ''),
+                        'source' => sanitize_key($post->post_type),
+                    );
+                }
+                wp_reset_postdata();
+            }
+        }
+
+        return rest_ensure_response(array(
+            'success' => true,
+            'sources' => $this->detected_product_sources(),
+            'page' => $page,
+            'per_page' => $per_page,
+            'total' => $total,
+            'products' => $products,
         ));
     }
 
