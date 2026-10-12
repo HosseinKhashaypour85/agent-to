@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.1.0
+ * Version: 2.2.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.1.0';
+    const VERSION = '2.2.0';
     const DEFAULT_API = 'https://agent-to.darkube.ir/api/v1';
 
     public function __construct() {
@@ -383,10 +383,9 @@ final class Agent_To_WordPress_Plugin {
 
     public function register_assets() {
         $s = $this->settings();
-        wp_register_style('agent-to-widget', false, array(), self::VERSION);
+        wp_register_style('agent-to-widget', plugins_url('assets/css/widget.css', __FILE__), array(), self::VERSION);
         wp_enqueue_style('agent-to-widget');
-        wp_add_inline_style('agent-to-widget', $this->css());
-        wp_register_script('agent-to-widget', false, array(), self::VERSION, true);
+        wp_register_script('agent-to-widget', plugins_url('assets/js/widget.js', __FILE__), array(), self::VERSION, true);
         wp_enqueue_script('agent-to-widget');
         wp_add_inline_script('agent-to-widget', 'window.AgentToConfig = ' . wp_json_encode(array(
             'endpoint' => esc_url_raw(rest_url(self::REST_NAMESPACE . '/chat')),
@@ -394,7 +393,6 @@ final class Agent_To_WordPress_Plugin {
             'welcome' => $s['welcome_message'],
             'color' => $s['primary_color'],
         )) . ';', 'before');
-        wp_add_inline_script('agent-to-widget', $this->javascript(), 'after');
     }
 
     public function render_floating_widget() {
@@ -418,53 +416,7 @@ final class Agent_To_WordPress_Plugin {
         return '<div class="agent-to-root agent-to-' . esc_attr($mode) . '" id="agent-to-widget-' . (int) $count . '" data-agent-to-mode="' . esc_attr($mode) . '"></div>';
     }
 
-    private function css() {
-        return '
-.agent-to-root{font-family:inherit;direction:rtl;z-index:999999;color:#1f2937}.agent-to-floating{position:fixed;bottom:22px;right:22px}.agent-to-launch{border:0;border-radius:999px;background:var(--agent-to-color,#10706B);color:#fff;padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 8px 28px #0002;cursor:pointer}.agent-to-panel{display:none;width:min(360px,calc(100vw - 28px));height:470px;max-height:70vh;background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 16px 60px #0002;overflow:hidden;margin-bottom:12px;flex-direction:column}.agent-to-panel.is-open{display:flex}.agent-to-embedded .agent-to-panel{display:flex;width:100%;height:520px;max-height:75vh;margin:0}.agent-to-head{background:var(--agent-to-color,#10706B);color:#fff;padding:15px;display:flex;align-items:center;justify-content:space-between;font-weight:700}.agent-to-close{background:transparent;color:#fff;border:0;font-size:24px;cursor:pointer}.agent-to-messages{padding:14px;flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;background:#f8fafc}.agent-to-msg{white-space:pre-wrap;overflow-wrap:anywhere;max-width:88%;padding:10px 12px;border-radius:14px;line-height:1.65;font-size:14px}.agent-to-msg.bot{align-self:flex-start;background:#fff;border:1px solid #e5e7eb}.agent-to-msg.user{align-self:flex-end;background:var(--agent-to-color,#10706B);color:#fff}.agent-to-form{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e7eb;background:#fff}.agent-to-input{min-width:0;flex:1;border:1px solid #d1d5db;border-radius:12px;padding:10px;font:inherit;font-size:14px}.agent-to-send{border:0;border-radius:12px;background:var(--agent-to-color,#10706B);color:#fff;padding:0 15px;cursor:pointer}.agent-to-send:disabled{opacity:.55;cursor:wait}.agent-to-error{font-size:12px;color:#b91c1c;padding:0 12px 8px}.agent-to-root *{box-sizing:border-box}
-        ';
-    }
 
-    private function javascript() {
-        return <<<'JS'
-(function(){
-  var cfg=window.AgentToConfig;if(!cfg)return;
-  function newId(){return 'v_'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now());}
-  function visitorId(){try{var key='agent_to_visitor_'+location.host;var id=localStorage.getItem(key);if(!id){id=newId();localStorage.setItem(key,id);}return id;}catch(e){return newId();}}
-  function replyText(data){return data&&typeof data.message==='string'?data.message:(data&&data.data&&typeof data.data.message==='string'?data.data.message:'');}
-  function init(root){
-    if(root.dataset.ready)return;root.dataset.ready='1';root.style.setProperty('--agent-to-color',cfg.color||'#10706B');
-    var mode=root.getAttribute('data-agent-to-mode')||'floating';
-    var panel=document.createElement('section');panel.className='agent-to-panel';
-    var head=document.createElement('div');head.className='agent-to-head';
-    var title=document.createElement('span');title.textContent=cfg.title||'دستیار هوشمند';head.appendChild(title);
-    var close=null;if(mode==='floating'){close=document.createElement('button');close.className='agent-to-close';close.type='button';close.setAttribute('aria-label','بستن');close.textContent='×';head.appendChild(close);}
-    var messages=document.createElement('div');messages.className='agent-to-messages';
-    var form=document.createElement('form');form.className='agent-to-form';
-    var input=document.createElement('input');input.className='agent-to-input';input.type='text';input.maxLength=2000;input.placeholder='پیامت را بنویس…';input.setAttribute('aria-label','پیام شما');input.required=true;
-    var send=document.createElement('button');send.className='agent-to-send';send.type='submit';send.textContent='ارسال';
-    var error=document.createElement('div');error.className='agent-to-error';error.hidden=true;
-    form.appendChild(input);form.appendChild(send);panel.appendChild(head);panel.appendChild(messages);panel.appendChild(error);panel.appendChild(form);
-    function add(text,who){var el=document.createElement('div');el.className='agent-to-msg '+who;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight;return el;}
-    add(cfg.welcome||'سلام! چطور می‌توانم کمکتان کنم؟','bot');
-    if(mode==='floating'){var launch=document.createElement('button');launch.type='button';launch.className='agent-to-launch';launch.textContent=cfg.title||'گفت‌وگو با ما';launch.addEventListener('click',function(){panel.classList.add('is-open');launch.hidden=true;input.focus();});close.addEventListener('click',function(){panel.classList.remove('is-open');launch.hidden=false;});root.appendChild(panel);root.appendChild(launch);}else{root.appendChild(panel);}
-    form.addEventListener('submit',async function(ev){
-      ev.preventDefault();var text=input.value.trim();if(!text||send.disabled)return;
-      add(text,'user');input.value='';error.hidden=true;send.disabled=true;send.textContent='…';var waiting=add('در حال دریافت پاسخ…','bot');
-      try{
-        var response=await fetch(cfg.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,visitorId:visitorId()})});
-        var data=await response.json().catch(function(){return {};});
-        if(!response.ok)throw new Error(data.message||data.code||'ارسال پیام ناموفق بود.');
-        var reply=replyText(data);if(!reply)throw new Error('پاسخ متنی از سرور دریافت نشد.');
-        waiting.textContent=reply;
-      }catch(e){waiting.remove();error.textContent=e.message||'ارتباط با سرور برقرار نشد.';error.hidden=false;}
-      finally{send.disabled=false;send.textContent='ارسال';input.focus();}
-    });
-  }
-  function boot(){document.querySelectorAll('.agent-to-root').forEach(init);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-})();
-JS;
-    }
 }
 
 new Agent_To_WordPress_Plugin();
