@@ -2,6 +2,8 @@ import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequ
 import { sequelize } from "../config/database";
 
 export type CartEndpoint = {
+  key: string;
+  label: string;
   url: string;
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   enabled: boolean;
