@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.4.0
+ * Version: 2.5.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.4.0';
+    const VERSION = '2.5.0';
     const DEFAULT_API = 'https://agent-to.darkube.ir/api/v1';
 
     public function __construct() {
@@ -41,6 +41,7 @@ final class Agent_To_WordPress_Plugin {
             'widget_title' => 'دستیار هوشمند',
             'welcome_message' => 'سلام! چطور می‌توانم کمکتان کنم؟',
             'primary_color' => '#10706B',
+            'custom_css' => '',
             'enabled' => '1',
             'auto_detect_products' => '1',
         );
@@ -75,10 +76,11 @@ final class Agent_To_WordPress_Plugin {
         $color = isset($input['primary_color']) ? sanitize_hex_color($input['primary_color']) : $old['primary_color'];
         return array(
             'site_id' => isset($input['site_id']) ? sanitize_text_field($input['site_id']) : $old['site_id'],
-            'api_url' => untrailingslashit($api),
+            'api_url' => $old['api_url'],
             'widget_title' => isset($input['widget_title']) ? sanitize_text_field($input['widget_title']) : $old['widget_title'],
             'welcome_message' => isset($input['welcome_message']) ? sanitize_textarea_field($input['welcome_message']) : $old['welcome_message'],
             'primary_color' => $color ? $color : '#10706B',
+            'custom_css' => isset($input['custom_css']) ? sanitize_textarea_field($input['custom_css']) : (isset($old['custom_css']) ? $old['custom_css'] : ''),
             'enabled' => !empty($input['enabled']) ? '1' : '0',
             'auto_detect_products' => !empty($input['auto_detect_products']) ? '1' : '0',
         );
@@ -124,10 +126,10 @@ final class Agent_To_WordPress_Plugin {
               <?php settings_fields('agent_to_wp_group'); ?>
               <table class="form-table" role="presentation">
                 <tr><th scope="row"><label for="agent-to-site-id">Site ID</label></th><td><input id="agent-to-site-id" name="<?php echo esc_attr(self::OPTION); ?>[site_id]" type="text" class="regular-text" value="<?php echo esc_attr($s['site_id']); ?>" required><p class="description">پس از نصب با توکن، این مقدار خودکار پر می‌شود. در صورت نیاز می‌توانی دستی هم واردش کنی.</p></td></tr>
-                <tr><th scope="row"><label for="agent-to-api-url">API Base URL</label></th><td><input id="agent-to-api-url" name="<?php echo esc_attr(self::OPTION); ?>[api_url]" type="url" class="regular-text" value="<?php echo esc_attr($s['api_url']); ?>" required><p class="description">پیش‌فرض: <?php echo esc_html(self::DEFAULT_API); ?></p></td></tr>
                 <tr><th scope="row"><label for="agent-to-title">عنوان ویجت</label></th><td><input id="agent-to-title" name="<?php echo esc_attr(self::OPTION); ?>[widget_title]" type="text" class="regular-text" value="<?php echo esc_attr($s['widget_title']); ?>"></td></tr>
                 <tr><th scope="row"><label for="agent-to-welcome">پیام خوشامد</label></th><td><textarea id="agent-to-welcome" name="<?php echo esc_attr(self::OPTION); ?>[welcome_message]" rows="3" class="large-text"><?php echo esc_textarea($s['welcome_message']); ?></textarea></td></tr>
                 <tr><th scope="row"><label for="agent-to-color">رنگ اصلی</label></th><td><input id="agent-to-color" name="<?php echo esc_attr(self::OPTION); ?>[primary_color]" type="color" value="<?php echo esc_attr($s['primary_color']); ?>"></td></tr>
+                <tr><th scope="row"><label for="agent-to-custom-css">CSS سفارشی ویجت</label></th><td><textarea id="agent-to-custom-css" name="<?php echo esc_attr(self::OPTION); ?>[custom_css]" rows="8" class="large-text code" dir="ltr" placeholder=".agent-to-panel { border-radius: 24px; }"><?php echo esc_textarea(isset($s['custom_css']) ? $s['custom_css'] : ''); ?></textarea><p class="description">برای تغییر ظاهر ویجت از اینجا CSS بنویس. کلاس‌های قابل تنظیم: <code>.agent-to-launch</code>، <code>.agent-to-panel</code>، <code>.agent-to-head</code>، <code>.agent-to-messages</code>، <code>.agent-to-msg</code>، <code>.agent-to-input</code> و <code>.agent-to-send</code>.</p></td></tr>
                 <tr><th scope="row">ویجت شناور</th><td><label><input name="<?php echo esc_attr(self::OPTION); ?>[enabled]" type="checkbox" value="1" <?php checked($s['enabled'], '1'); ?>> نمایش چت در گوشه سایت</label></td></tr>
                 <tr><th scope="row">تشخیص خودکار محصولات</th><td><label><input name="<?php echo esc_attr(self::OPTION); ?>[auto_detect_products]" type="checkbox" value="1" <?php checked($s['auto_detect_products'], '1'); ?>> شناسایی محصولات فروشگاه برای استفاده در دستیار</label><p class="description">ووکامرس به‌صورت مستقیم پشتیبانی می‌شود؛ برای افزونه‌های دیگر، نوع نوشته عمومی محصول و فیلدهای استاندارد قابل تشخیص بررسی می‌شود.</p>
                 <p><strong>منابع شناسایی‌شده:</strong> <?php echo esc_html(implode('، ', $this->detected_product_sources())); ?></p></td></tr>
@@ -389,6 +391,9 @@ final class Agent_To_WordPress_Plugin {
         $s = $this->settings();
         wp_register_style('agent-to-widget', plugins_url('assets/css/widget.css', __FILE__), array(), self::VERSION);
         wp_enqueue_style('agent-to-widget');
+        if (!empty($s['custom_css'])) {
+            wp_add_inline_style('agent-to-widget', $s['custom_css']);
+        }
         wp_register_script('agent-to-widget', plugins_url('assets/js/widget.js', __FILE__), array(), self::VERSION, true);
         wp_enqueue_script('agent-to-widget');
         wp_add_inline_script('agent-to-widget', 'window.AgentToConfig = ' . wp_json_encode(array(
