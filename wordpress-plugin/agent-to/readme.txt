@@ -4,10 +4,10 @@ Tags: chatbot, ai, customer support, live chat
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.2.0
+Stable tag: 2.3.0
 License: GPLv2 or later
 
-Connect WordPress to the Agent-To AI assistant using an installation token or an existing Site ID. Includes a floating chat widget, shortcode, connection test, and server-side REST proxy.
+Connect WordPress to Agent-To with a dedicated /ai-agent page, an optional floating chat widget, product detection, and a server-side REST proxy.
 
 == Installation ==
 1. Download the ZIP and upload it from Plugins > Add New > Upload Plugin.
@@ -22,8 +22,11 @@ Connect WordPress to the Agent-To AI assistant using an installation token or an
 If the site was already installed, enter its Site ID manually and set the API Base URL. Default:
 https://agent-to.darkube.ir/api/v1
 
-== Shortcode ==
-Use [agent_to_chat] in a page or post to embed the chat. Disable the floating widget in settings if you only want the shortcode.
+== Dedicated agent page ==
+After connecting the site, the plugin registers /ai-agent automatically. Visit:
+https://your-domain.com/ai-agent?siteId=YOUR_SITE_ID
+
+The page displays the central Agent-To Next.js app and does not require a shortcode. The floating widget remains an independent setting and is hidden on the full-page agent route.
 
 == Backend requirements ==
 - The Site ID must exist and be ACTIVE.
@@ -42,6 +45,10 @@ Use [agent_to_chat] in a page or post to embed the chat. Disable the floating wi
 - **API test fails**: confirm API Base URL, outbound HTTPS from the WordPress host, and that the backend is reachable.
 
 == Changelog ==
+= 2.3.0 =
+* Added a dedicated /ai-agent route without requiring a shortcode.
+* Kept the floating widget as a separate setting and hid it on the full-page route.
+
 = 2.2.0 =
 * Moved chat widget CSS and JavaScript into separate asset files for easier UI/UX updates.
 * Added asset versioning to refresh cached widget files after plugin updates.
