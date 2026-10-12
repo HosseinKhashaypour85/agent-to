@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.5.0
+ * Version: 2.6.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.5.0';
+    const VERSION = '2.6.0';
     const DEFAULT_API = 'https://agent-to.darkube.ir/api/v1';
 
     public function __construct() {
@@ -41,6 +41,7 @@ final class Agent_To_WordPress_Plugin {
             'widget_title' => 'دستیار هوشمند',
             'welcome_message' => 'سلام! چطور می‌توانم کمکتان کنم؟',
             'primary_color' => '#10706B',
+            'logo_url' => '',
             'custom_css' => '',
             'enabled' => '1',
             'auto_detect_products' => '1',
@@ -80,6 +81,7 @@ final class Agent_To_WordPress_Plugin {
             'widget_title' => isset($input['widget_title']) ? sanitize_text_field($input['widget_title']) : $old['widget_title'],
             'welcome_message' => isset($input['welcome_message']) ? sanitize_textarea_field($input['welcome_message']) : $old['welcome_message'],
             'primary_color' => $color ? $color : '#10706B',
+            'logo_url' => isset($input['logo_url']) ? esc_url_raw($input['logo_url']) : (isset($old['logo_url']) ? $old['logo_url'] : ''),
             'custom_css' => isset($input['custom_css']) ? sanitize_textarea_field($input['custom_css']) : (isset($old['custom_css']) ? $old['custom_css'] : ''),
             'enabled' => !empty($input['enabled']) ? '1' : '0',
             'auto_detect_products' => !empty($input['auto_detect_products']) ? '1' : '0',
@@ -91,6 +93,7 @@ final class Agent_To_WordPress_Plugin {
             return;
         }
         $s = $this->settings();
+        wp_enqueue_media();
         $notice = isset($_GET['agent_to_notice']) ? sanitize_key(wp_unslash($_GET['agent_to_notice'])) : '';
         $messages = array(
             'connected' => array('success', 'اتصال Agent-To برقرار شد و Site ID ذخیره شد.'),
@@ -129,6 +132,7 @@ final class Agent_To_WordPress_Plugin {
                 <tr><th scope="row"><label for="agent-to-title">عنوان ویجت</label></th><td><input id="agent-to-title" name="<?php echo esc_attr(self::OPTION); ?>[widget_title]" type="text" class="regular-text" value="<?php echo esc_attr($s['widget_title']); ?>"></td></tr>
                 <tr><th scope="row"><label for="agent-to-welcome">پیام خوشامد</label></th><td><textarea id="agent-to-welcome" name="<?php echo esc_attr(self::OPTION); ?>[welcome_message]" rows="3" class="large-text"><?php echo esc_textarea($s['welcome_message']); ?></textarea></td></tr>
                 <tr><th scope="row"><label for="agent-to-color">رنگ اصلی</label></th><td><input id="agent-to-color" name="<?php echo esc_attr(self::OPTION); ?>[primary_color]" type="color" value="<?php echo esc_attr($s['primary_color']); ?>"></td></tr>
+                <tr><th scope="row"><label for="agent-to-logo-url">لوگوی سایت / دستیار</label></th><td><input id="agent-to-logo-url" name="<?php echo esc_attr(self::OPTION); ?>[logo_url]" type="url" class="large-text" dir="ltr" value="<?php echo esc_attr(isset($s['logo_url']) ? $s['logo_url'] : ''); ?>" placeholder="https://example.com/logo.png"><p><button type="button" class="button" id="agent-to-select-logo">انتخاب یا آپلود لوگو</button> <button type="button" class="button" id="agent-to-remove-logo">حذف لوگو</button></p><img id="agent-to-logo-preview" src="<?php echo esc_url(isset($s['logo_url']) ? $s['logo_url'] : ''); ?>" alt="پیش‌نمایش لوگو" style="<?php echo empty($s['logo_url']) ? 'display:none;' : ''; ?>max-width:90px;max-height:90px;object-fit:contain;background:#f8fafc;padding:8px;border:1px solid #e5e7eb;border-radius:12px"><p class="description">این لوگو در هدر ویجت و کنار پیام‌های دستیار نمایش داده می‌شود. اگر لوگو انتخاب نکنی، حرف اول نام سایت نمایش داده می‌شود.</p></td></tr>
                 <tr><th scope="row"><label for="agent-to-custom-css">CSS سفارشی ویجت</label></th><td><textarea id="agent-to-custom-css" name="<?php echo esc_attr(self::OPTION); ?>[custom_css]" rows="8" class="large-text code" dir="ltr" placeholder=".agent-to-panel { border-radius: 24px; }"><?php echo esc_textarea(isset($s['custom_css']) ? $s['custom_css'] : ''); ?></textarea><p class="description">برای تغییر ظاهر ویجت از اینجا CSS بنویس. کلاس‌های قابل تنظیم: <code>.agent-to-launch</code>، <code>.agent-to-panel</code>، <code>.agent-to-head</code>، <code>.agent-to-messages</code>، <code>.agent-to-msg</code>، <code>.agent-to-input</code> و <code>.agent-to-send</code>.</p></td></tr>
                 <tr><th scope="row">ویجت شناور</th><td><label><input name="<?php echo esc_attr(self::OPTION); ?>[enabled]" type="checkbox" value="1" <?php checked($s['enabled'], '1'); ?>> نمایش چت در گوشه سایت</label></td></tr>
                 <tr><th scope="row">تشخیص خودکار محصولات</th><td><label><input name="<?php echo esc_attr(self::OPTION); ?>[auto_detect_products]" type="checkbox" value="1" <?php checked($s['auto_detect_products'], '1'); ?>> شناسایی محصولات فروشگاه برای استفاده در دستیار</label><p class="description">ووکامرس به‌صورت مستقیم پشتیبانی می‌شود؛ برای افزونه‌های دیگر، نوع نوشته عمومی محصول و فیلدهای استاندارد قابل تشخیص بررسی می‌شود.</p>
@@ -150,6 +154,27 @@ final class Agent_To_WordPress_Plugin {
             <p class="description">ویجت شناور از گزینه مستقل بالا کنترل می‌شود. صفحه اختصاصی در مسیر <code>/ai-agent</code> نمایش داده می‌شود.</p>
           </div>
         </div>
+        <script>
+        jQuery(function($) {
+            var frame;
+            $('#agent-to-select-logo').on('click', function(e) {
+                e.preventDefault();
+                if (frame) { frame.open(); return; }
+                frame = wp.media({ title: 'انتخاب لوگوی سایت', button: { text: 'استفاده از این لوگو' }, multiple: false, library: { type: 'image' } });
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#agent-to-logo-url').val(attachment.url);
+                    $('#agent-to-logo-preview').attr('src', attachment.url).show();
+                });
+                frame.open();
+            });
+            $('#agent-to-remove-logo').on('click', function(e) {
+                e.preventDefault();
+                $('#agent-to-logo-url').val('');
+                $('#agent-to-logo-preview').attr('src', '').hide();
+            });
+        });
+        </script>
         <?php
     }
 
@@ -401,6 +426,8 @@ final class Agent_To_WordPress_Plugin {
             'title' => $s['widget_title'],
             'welcome' => $s['welcome_message'],
             'color' => $s['primary_color'],
+            'logoUrl' => isset($s['logo_url']) ? esc_url_raw($s['logo_url']) : '',
+            'siteName' => get_bloginfo('name'),
         )) . ';', 'before');
     }
 
