@@ -498,21 +498,9 @@ body.admin-bar #agent-to-full-page{height:calc(100vh - 32px);height:calc(100dvh 
 }
 
 register_activation_hook(__FILE__, function () {
-    add_rewrite_rule('^ai-agent/?
-register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
-
-new Agent_To_WordPress_Plugin();
-, 'index.php?agent_to_page=1', 'top');
-    add_rewrite_rule('^customer-login/?
-register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
-
-new Agent_To_WordPress_Plugin();
-, 'index.php?agent_to_panel=customer-login', 'top');
-    add_rewrite_rule('^customer-dashboard/?
-register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
-
-new Agent_To_WordPress_Plugin();
-, 'index.php?agent_to_panel=customer-dashboard', 'top');
+    add_rewrite_rule('^ai-agent/?$', 'index.php?agent_to_page=1', 'top');
+    add_rewrite_rule('^customer-login/?$', 'index.php?agent_to_panel=customer-login', 'top');
+    add_rewrite_rule('^customer-dashboard/?$', 'index.php?agent_to_panel=customer-dashboard', 'top');
     flush_rewrite_rules();
 });
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
