@@ -478,6 +478,9 @@ final class Agent_To_WordPress_Plugin {
 
         if ($is_agent_page) {
             $app_url = add_query_arg('siteId', $site_id, 'https://agent-to-front.darkube.ir/ai-agent');
+            if (!empty($s['logo_url'])) {
+                $app_url = add_query_arg('brandLogo', esc_url_raw($s['logo_url']), $app_url);
+            }
         } else {
             $app_url = 'https://agent-to-front.darkube.ir/' . $panel_route;
             if ($site_id !== '') {
