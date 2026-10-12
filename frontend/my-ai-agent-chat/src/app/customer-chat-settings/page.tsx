@@ -19,6 +19,7 @@ import {
 
 type Site = { id: string; siteId: string; name: string; domain: string };
 type ThemeSettings = {
+  logoUrl: string | null;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
@@ -31,8 +32,10 @@ type ThemeSettings = {
   buttonTextColor: string;
 };
 
+type ColorKey = Exclude<keyof ThemeSettings, "logoUrl">;
+
 const colorFields: {
-  key: keyof ThemeSettings;
+  key: ColorKey;
   label: string;
   hint: string;
 }[] = [
@@ -49,6 +52,7 @@ const colorFields: {
 ];
 
 const defaults: ThemeSettings = {
+  logoUrl: null,
   primaryColor: "#10706B",
   secondaryColor: "#0D5C58",
   accentColor: "#F59E0B",
@@ -252,6 +256,62 @@ export default function CustomerChatSettingsPage() {
         </select>
       </div>
 
+      {/* ===== Logo Branding ===== */}
+      {siteId && !loading && (
+        <section className="mb-6 rounded-3xl border border-[#E4EBE8] bg-white/90 p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-[#C9DAD6] bg-[#F4FBF9]">
+              {settings.logoUrl ? (
+                <img
+                  src={settings.logoUrl}
+                  alt="پیش‌نمایش لوگوی چت‌بات"
+                  className="h-full w-full object-contain p-2"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <Palette size={26} className="text-[#10706B]" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-black text-slate-900">لوگوی اختصاصی چت‌بات</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                لینک مستقیم تصویر لوگوی کسب‌وکارت را وارد کن. این لوگو برای همین سایت ذخیره می‌شود و در چت‌بات نمایش داده خواهد شد.
+              </p>
+              <label htmlFor="chatbot-logo-url" className="mt-4 block text-xs font-bold text-slate-700">
+                آدرس تصویر لوگو
+              </label>
+              <input
+                id="chatbot-logo-url"
+                type="url"
+                value={settings.logoUrl || ""}
+                onChange={(event) => setSettings((prev) => ({
+                  ...prev,
+                  logoUrl: event.target.value.trim() ? event.target.value.trim() : null,
+                }))}
+                placeholder="https://example.com/logo.png"
+                maxLength={1000}
+                dir="ltr"
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#10706B] focus:ring-4 focus:ring-[#10706B]/10"
+              />
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <span className="text-xs text-slate-400">PNG، JPG، SVG یا WEBP؛ تا ۱۰۰۰ کاراکتر برای لینک</span>
+                {settings.logoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setSettings((prev) => ({ ...prev, logoUrl: null }))}
+                    className="text-xs font-bold text-rose-600 transition hover:text-rose-700"
+                  >
+                    حذف لوگو
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ===== Content ===== */}
       {loading ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-[#E4EBE8] bg-white/80 p-16 text-sm text-slate-500 shadow-sm backdrop-blur">
@@ -368,13 +428,22 @@ export default function CustomerChatSettingsPage() {
                     style={{ borderColor: settings.borderColor }}
                   >
                     <span
-                      className="grid h-9 w-9 place-items-center rounded-2xl text-sm font-bold shadow-sm"
+                      className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-2xl text-sm font-bold shadow-sm"
                       style={{
                         background: `linear-gradient(135deg, ${settings.primaryColor}, ${settings.secondaryColor})`,
                         color: settings.buttonTextColor,
                       }}
                     >
-                      A
+                      {settings.logoUrl ? (
+                        <img
+                          src={settings.logoUrl}
+                          alt="لوگوی کسب‌وکار"
+                          className="h-full w-full object-contain bg-white p-1"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : "A"}
                     </span>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold">ایجنت هوشمند</span>
