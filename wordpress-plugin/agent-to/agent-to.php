@@ -400,18 +400,11 @@ final class Agent_To_WordPress_Plugin {
     }
 
     public function register_agent_page_rewrite() {
-        add_rewrite_rule('^ai-agent/?
-        static $count = 0;
-        $count++;
-        return '<div class="agent-to-root agent-to-' . esc_attr($mode) . '" id="agent-to-widget-' . (int) $count . '" data-agent-to-mode="' . esc_attr($mode) . '"></div>';
-    }
-
-
-}
-
-register_activation_hook(__FILE__, function () {
-    add_rewrite_rule('^ai-agent/?
-, 'index.php?agent_to_page=1', 'top');
+        add_rewrite_rule('^ai-agent/?$', 'index.php?agent_to_page=1', 'top');
+        if (get_option('agent_to_rewrite_version') !== self::VERSION) {
+            flush_rewrite_rules(false);
+            update_option('agent_to_rewrite_version', self::VERSION, false);
+        }
     }
 
     public function register_agent_page_query_var($vars) {
@@ -482,83 +475,12 @@ body.admin-bar #agent-to-full-page{height:calc(100vh - 32px);height:calc(100dvh 
 
 }
 
-new Agent_To_WordPress_Plugin();
+register_activation_hook(__FILE__, function () {
+    add_rewrite_rule('^ai-agent/?
 , 'index.php?agent_to_page=1', 'top');
     flush_rewrite_rules();
 });
 
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
-
-new Agent_To_WordPress_Plugin();
-, 'index.php?agent_to_page=1', 'top');
-    }
-
-    public function register_agent_page_query_var($vars) {
-        $vars[] = 'agent_to_page';
-        return $vars;
-    }
-
-    private function is_agent_page() {
-        return (string) get_query_var('agent_to_page') === '1';
-    }
-
-    public function render_agent_page() {
-        if (!$this->is_agent_page()) {
-            return;
-        }
-
-        $s = $this->settings();
-        if (empty($s['site_id'])) {
-            status_header(503);
-            nocache_headers();
-            wp_die('ابتدا افزونه Agent-To را از مسیر تنظیمات متصل کنید.', 'Agent-To', array('response' => 503));
-        }
-
-        $site_id = sanitize_text_field(wp_unslash((string) get_query_var('siteId')));
-        if ($site_id === '') {
-            $site_id = $s['site_id'];
-        }
-        $app_url = add_query_arg('siteId', $site_id, 'https://agent-to-front.darkube.ir/ai-agent');
-        status_header(200);
-        nocache_headers();
-        ?><!doctype html>
-<html <?php language_attributes(); ?>>
-<head>
-<meta charset="<?php bloginfo('charset'); ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?php echo esc_html($s['widget_title']); ?></title>
-<style>
-html,body{margin:0!important;padding:0!important;width:100%;height:100%;min-height:100%;overflow:hidden;background:#fff}
-#agent-to-full-page{display:block;width:100%;height:100vh;height:100dvh;border:0;margin:0;padding:0}
-body.admin-bar #agent-to-full-page{height:calc(100vh - 32px);height:calc(100dvh - 32px)}
-@media(max-width:782px){body.admin-bar #agent-to-full-page{height:calc(100vh - 46px);height:calc(100dvh - 46px)}}
-</style>
-<?php wp_head(); ?>
-</head>
-<body <?php body_class('agent-to-full-page-body'); ?>>
-<?php wp_body_open(); ?>
-<iframe id="agent-to-full-page" src="<?php echo esc_url($app_url); ?>" title="<?php echo esc_attr($s['widget_title']); ?>" allow="clipboard-write" loading="eager"></iframe>
-<?php wp_footer(); ?>
-</body>
-</html><?php
-        exit;
-    }
-
-    public function render_floating_widget() {
-        $s = $this->settings();
-        if ($this->is_agent_page() || $s['enabled'] !== '1' || empty($s['site_id'])) {
-            return;
-        }
-        echo $this->widget_markup('floating');
-    }
-
-    private function widget_markup($mode) {
-        static $count = 0;
-        $count++;
-        return '<div class="agent-to-root agent-to-' . esc_attr($mode) . '" id="agent-to-widget-' . (int) $count . '" data-agent-to-mode="' . esc_attr($mode) . '"></div>';
-    }
-
-
-}
 
 new Agent_To_WordPress_Plugin();
