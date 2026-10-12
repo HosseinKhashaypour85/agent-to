@@ -12,6 +12,29 @@ const CHANNEL_NAMES: Record<ChannelType, string> = {
   WHATSAPP: "WhatsApp",
 };
 
+const DEFAULT_AGENT_PROMPT =
+  "شما دستیار هوشمند کسب‌وکار هستید. پاسخ‌ها را دقیق، مفید و محترمانه ارائه دهید.";
+
+// Repair tenants created before automatic agent provisioning was added.
+async function getOrCreateAgent(tenantId: string) {
+  let agent = await Agent.findOne({ where: { tenantId } });
+
+  if (!agent) {
+    agent = await Agent.create({
+      id: randomUUID(),
+      tenantId,
+      name: "AI Agent",
+      description: null,
+      systemPrompt: DEFAULT_AGENT_PROMPT,
+      language: "fa",
+      tone: "friendly",
+      isActive: true,
+    });
+  }
+
+  return agent;
+}
+
 function toSafeChannel(channel: AgentChannel) {
   const config = (channel.config as Record<string, unknown> | null) || {};
   const { botToken, ...safeConfig } = config;
@@ -28,13 +51,7 @@ function toSafeChannel(channel: AgentChannel) {
 export async function getChannels(
   tenantId: string
 ) {
-  const agent = await Agent.findOne({
-    where: { tenantId },
-  });
-
-  if (!agent) {
-    throw new Error("AGENT_NOT_FOUND");
-  }
+  const agent = await getOrCreateAgent(tenantId);
 
   const channels = await AgentChannel.findAll({
     where: {
@@ -53,13 +70,7 @@ export async function createChannel(
   type: ChannelType,
   data: Record<string, unknown>
 ) {
-  const agent = await Agent.findOne({
-    where: { tenantId },
-  });
-
-  if (!agent) {
-    throw new Error("AGENT_NOT_FOUND");
-  }
+  const agent = await getOrCreateAgent(tenantId);
 
   if (!isValidChannelType(type)) {
     throw new Error("INVALID_CHANNEL_TYPE");
