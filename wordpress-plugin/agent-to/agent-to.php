@@ -435,7 +435,7 @@ register_activation_hook(__FILE__, function () {
             wp_die('ابتدا افزونه Agent-To را از مسیر تنظیمات متصل کنید.', 'Agent-To', array('response' => 503));
         }
 
-        $site_id = sanitize_text_field(wp_unslash((string) get_query_var('siteId')));
+        $site_id = isset($_GET['siteId']) ? sanitize_text_field(wp_unslash((string) $_GET['siteId'])) : '';
         if ($site_id === '') {
             $site_id = $s['site_id'];
         }
