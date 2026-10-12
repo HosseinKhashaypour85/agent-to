@@ -482,7 +482,7 @@ body.admin-bar #agent-to-full-page{height:calc(100vh - 32px);height:calc(100dvh 
 
     public function render_floating_widget() {
         $s = $this->settings();
-        if ($this->is_agent_page() || $s['enabled'] !== '1' || empty($s['site_id'])) {
+        if ($this->is_agent_page() || $this->is_customer_panel_page() || $s['enabled'] !== '1' || empty($s['site_id'])) {
             return;
         }
         echo $this->widget_markup('floating');
