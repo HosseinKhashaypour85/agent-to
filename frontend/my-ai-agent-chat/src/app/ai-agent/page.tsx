@@ -40,6 +40,12 @@ function getSiteId(): string {
   return siteId;
 }
 
+function getBrandLogo(): string | null {
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.search);
+  return safeHttpUrl(params.get("brandLogo"));
+}
+
 /* ======================================================
    Types
 ====================================================== */
@@ -122,6 +128,34 @@ function safeHttpUrl(value?: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+function SiteAvatar({
+  logoUrl,
+  siteName,
+  className,
+}: {
+  logoUrl?: string | null;
+  siteName?: string | null;
+  className: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const initial = Array.from((siteName || "").trim())[0] || "A";
+
+  return (
+    <div className={className}>
+      {logoUrl && !failed ? (
+        <img
+          src={logoUrl}
+          alt={siteName || "لوگوی سایت"}
+          className="w-full h-full object-contain"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span>{initial}</span>
+      )}
+    </div>
+  );
 }
 
 /* ======================================================
@@ -244,6 +278,10 @@ export default function AIAgentPage() {
           );
         }
 
+        const brandLogo = getBrandLogo();
+        if (brandLogo) {
+          data.settings.logoUrl = brandLogo;
+        }
         setConfig(data);
       } catch (err) {
         console.error(
@@ -556,31 +594,15 @@ export default function AIAgentPage() {
                 style={{
                   background:
                     `linear-gradient(135deg, ${settings.primaryColor}, ${settings.secondaryColor})`,
-
                   boxShadow:
                     `0 8px 25px -10px ${settings.primaryColor}`,
                 }}
               >
-
-                {settings.logoUrl ? (
-                  <img
-                    src={settings.logoUrl}
-                    alt={site.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span
-                    className="text-lg font-bold"
-                    style={{
-                      color:
-                        settings.buttonTextColor,
-                    }}
-                  >
-                    {site.name?.charAt(0) ||
-                      "A"}
-                  </span>
-                )}
-
+                <SiteAvatar
+                  logoUrl={settings.logoUrl}
+                  siteName={site.name}
+                  className="w-full h-full flex items-center justify-center text-lg font-bold text-white"
+                />
               </div>
 
               <span
@@ -799,18 +821,18 @@ export default function AIAgentPage() {
 
                         {!isUser && (
                           <div
-                            className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-xs font-bold"
+                            className="w-8 h-8 rounded-xl shrink-0 overflow-hidden flex items-center justify-center text-xs font-bold"
                             style={{
                               background:
                                 `linear-gradient(135deg, ${settings.primaryColor}, ${settings.secondaryColor})`,
-
-                              color:
-                                settings.buttonTextColor,
+                              color: settings.buttonTextColor,
                             }}
                           >
-                            {site.name?.charAt(
-                              0
-                            ) || "A"}
+                            <SiteAvatar
+                              logoUrl={settings.logoUrl}
+                              siteName={site.name}
+                              className="w-full h-full flex items-center justify-center"
+                            />
                           </div>
                         )}
 
