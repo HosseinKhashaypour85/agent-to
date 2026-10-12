@@ -4,7 +4,7 @@ Tags: chatbot, ai, customer support, live chat
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.2.0
 License: GPLv2 or later
 
 Connect WordPress to the Agent-To AI assistant using an installation token or an existing Site ID. Includes a floating chat widget, shortcode, connection test, and server-side REST proxy.
@@ -42,6 +42,10 @@ Use [agent_to_chat] in a page or post to embed the chat. Disable the floating wi
 - **API test fails**: confirm API Base URL, outbound HTTPS from the WordPress host, and that the backend is reachable.
 
 == Changelog ==
+= 2.2.0 =
+* Moved chat widget CSS and JavaScript into separate asset files for easier UI/UX updates.
+* Added asset versioning to refresh cached widget files after plugin updates.
+
 = 2.0.0 =
 * Added one-time installation-token connection flow.
 * Added API connection test.
