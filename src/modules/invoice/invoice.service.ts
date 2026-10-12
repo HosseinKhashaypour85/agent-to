@@ -1,4 +1,3 @@
-import { Op } from "sequelize";
 import Invoice, { InvoiceStatus } from "../../models/Invoice";
 
 const allowedStatuses = new Set<InvoiceStatus>([
@@ -13,7 +12,7 @@ export async function listInvoices(
   const limitValue = Number(options.limit ?? 20);
   const page = Number.isInteger(pageValue) && pageValue > 0 ? pageValue : 1;
   const limit = Number.isInteger(limitValue) && limitValue > 0 ? Math.min(limitValue, 100) : 20;
-  const where: Record<string, unknown> = { tenantId };
+  const where: any = { tenantId };
 
   if (typeof options.status === "string" && options.status.trim()) {
     const status = options.status.trim().toUpperCase() as InvoiceStatus;
