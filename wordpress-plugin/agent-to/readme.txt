@@ -4,7 +4,7 @@ Tags: chatbot, ai, customer support, live chat
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.3.0
+Stable tag: 2.4.0
 License: GPLv2 or later
 
 Connect WordPress to Agent-To with a dedicated /ai-agent page, an optional floating chat widget, product detection, and a server-side REST proxy.
@@ -26,7 +26,7 @@ https://agent-to.darkube.ir/api/v1
 After connecting the site, the plugin registers /ai-agent automatically. Visit:
 https://your-domain.com/ai-agent?siteId=YOUR_SITE_ID
 
-The page displays the central Agent-To Next.js app and does not require a shortcode. The floating widget remains an independent setting and is hidden on the full-page agent route.
+The page displays the central Agent-To Next.js app and does not require a shortcode. The floating widget remains independent. The plugin also exposes /customer-login and /customer-dashboard, which load the existing customer login and dashboard pages from the central app on the customer's own domain.
 
 == Backend requirements ==
 - The Site ID must exist and be ACTIVE.
@@ -44,8 +44,17 @@ The page displays the central Agent-To Next.js app and does not require a shortc
 - **AI service error**: check the backend logs and AI provider credentials.
 - **API test fails**: confirm API Base URL, outbound HTTPS from the WordPress host, and that the backend is reachable.
 
+== Customer panel routes ==
+After activating the plugin, these routes are available on the customer's domain:
+* https://your-domain.com/customer-login
+* https://your-domain.com/customer-dashboard
+
+They display the existing central Agent-To pages inside a full-screen iframe; they do not deploy a separate Next.js runtime to the customer's PHP hosting. WordPress refreshes rewrite rules when the plugin version changes.
+
 == Changelog ==
-= 2.3.0 =
+= 2.4.0 =
+* Added /customer-login and /customer-dashboard routes on the customer's domain.
+* Hid the floating widget on customer panel routes.
 * Added a dedicated /ai-agent route without requiring a shortcode.
 * Kept the floating widget as a separate setting and hid it on the full-page route.
 
