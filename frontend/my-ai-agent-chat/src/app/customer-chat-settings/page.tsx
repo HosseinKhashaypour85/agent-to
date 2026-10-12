@@ -32,8 +32,10 @@ type ThemeSettings = {
   buttonTextColor: string;
 };
 
+type ColorKey = Exclude<keyof ThemeSettings, "logoUrl">;
+
 const colorFields: {
-  key: keyof ThemeSettings;
+  key: ColorKey;
   label: string;
   hint: string;
 }[] = [
