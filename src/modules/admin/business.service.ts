@@ -4,6 +4,7 @@ import { Transaction } from "sequelize";
 import { sequelize } from "../../config/database";
 import Tenant from "../../models/Tenant";
 import User from "../../models/User";
+import Agent from "../../models/Agent";
 
 interface CreateBusinessInput {
   name: string;
@@ -108,6 +109,19 @@ export async function createBusiness(input: CreateBusinessInput) {
       role: "ADMIN",
       isEmailVerified: false,
       lastLogin: null,
+    }, { transaction });
+
+    // Every new tenant must have an agent so channel APIs work immediately.
+    await Agent.create({
+      id: randomUUID(),
+      tenantId: business.id,
+      name: "AI Agent",
+      description: null,
+      systemPrompt:
+        "شما دستیار هوشمند کسب‌وکار هستید. پاسخ‌ها را دقیق، مفید و محترمانه ارائه دهید.",
+      language: "fa",
+      tone: "friendly",
+      isActive: true,
     }, { transaction });
 
     await transaction.commit();
