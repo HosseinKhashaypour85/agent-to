@@ -36,6 +36,7 @@ import supportRoutes from "./modules/support/support.routes";
 import usageRoutes from "./modules/usage/usage.routes";
 import customerSubscriptionRoutes from "./modules/subscription/customer-subscription.routes";
 import invoiceRoutes from "./modules/invoice/invoice.routes";
+import cartIntegrationRoutes from "./modules/site/cart-integration.routes";
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -176,4 +177,5 @@ app.use("/api/v1/support", supportRoutes);
 app.use("/api/v1/usage", usageRoutes);
 app.use("/api/v1/subscriptions", customerSubscriptionRoutes);
 app.use("/api/v1/invoices", invoiceRoutes);
+app.use("/api/v1/cart-integrations", cartIntegrationRoutes);
 export default app;

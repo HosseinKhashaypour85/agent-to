@@ -23,6 +23,7 @@ import LeadScore from "./models/LeadScore";
 import CustomerMemory from "./models/CustomerMemory";
 import UsageRecord from "./models/UsageRecord";
 import Invoice from "./models/Invoice";
+import CartIntegration from "./models/CartIntegration";
 
 Lead.belongsTo(Customer, {
   foreignKey: "customerId",
