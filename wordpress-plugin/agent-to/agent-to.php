@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.3.0
+ * Version: 2.4.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.3.0';
+    const VERSION = '2.4.0';
     const DEFAULT_API = 'https://agent-to.darkube.ir/api/v1';
 
     public function __construct() {
@@ -401,6 +401,9 @@ final class Agent_To_WordPress_Plugin {
 
     public function register_agent_page_rewrite() {
         add_rewrite_rule('^ai-agent/?$', 'index.php?agent_to_page=1', 'top');
+        add_rewrite_rule('^customer-login/?$', 'index.php?agent_to_panel=customer-login', 'top');
+        add_rewrite_rule('^customer-dashboard/?$', 'index.php?agent_to_panel=customer-dashboard', 'top');
+
         if (get_option('agent_to_rewrite_version') !== self::VERSION) {
             flush_rewrite_rules(false);
             update_option('agent_to_rewrite_version', self::VERSION, false);
@@ -409,6 +412,7 @@ final class Agent_To_WordPress_Plugin {
 
     public function register_agent_page_query_var($vars) {
         $vars[] = 'agent_to_page';
+        $vars[] = 'agent_to_panel';
         return $vars;
     }
 
@@ -416,8 +420,15 @@ final class Agent_To_WordPress_Plugin {
         return (string) get_query_var('agent_to_page') === '1';
     }
 
+    private function is_customer_panel_page() {
+        return in_array((string) get_query_var('agent_to_panel'), array('customer-login', 'customer-dashboard'), true);
+    }
+
     public function render_agent_page() {
-        if (!$this->is_agent_page()) {
+        $is_agent_page = $this->is_agent_page();
+        $panel_route = (string) get_query_var('agent_to_panel');
+
+        if (!$is_agent_page && !$this->is_customer_panel_page()) {
             return;
         }
 
@@ -432,7 +443,18 @@ final class Agent_To_WordPress_Plugin {
         if ($site_id === '') {
             $site_id = $s['site_id'];
         }
-        $app_url = add_query_arg('siteId', $site_id, 'https://agent-to-front.darkube.ir/ai-agent');
+
+        if ($is_agent_page) {
+            $app_url = add_query_arg('siteId', $site_id, 'https://agent-to-front.darkube.ir/ai-agent');
+        } else {
+            $app_url = 'https://agent-to-front.darkube.ir/' . $panel_route;
+            if ($site_id !== '') {
+                $app_url = add_query_arg('siteId', $site_id, $app_url);
+            }
+        }
+
+        $page_title = $is_agent_page ? $s['widget_title'] : 'Agent-To - ' . ($panel_route === 'customer-login' ? 'ورود مشتری' : 'پنل مشتری');
+
         status_header(200);
         nocache_headers();
         ?><!doctype html>
@@ -440,7 +462,7 @@ final class Agent_To_WordPress_Plugin {
 <head>
 <meta charset="<?php bloginfo('charset'); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?php echo esc_html($s['widget_title']); ?></title>
+<title><?php echo esc_html($page_title); ?></title>
 <style>
 html,body{margin:0!important;padding:0!important;width:100%;height:100%;min-height:100%;overflow:hidden;background:#fff}
 #agent-to-full-page{display:block;width:100%;height:100vh;height:100dvh;border:0;margin:0;padding:0}
@@ -451,7 +473,7 @@ body.admin-bar #agent-to-full-page{height:calc(100vh - 32px);height:calc(100dvh 
 </head>
 <body <?php body_class('agent-to-full-page-body'); ?>>
 <?php wp_body_open(); ?>
-<iframe id="agent-to-full-page" src="<?php echo esc_url($app_url); ?>" title="<?php echo esc_attr($s['widget_title']); ?>" allow="clipboard-write" loading="eager"></iframe>
+<iframe id="agent-to-full-page" src="<?php echo esc_url($app_url); ?>" title="<?php echo esc_attr($page_title); ?>" allow="clipboard-write" loading="eager"></iframe>
 <?php wp_footer(); ?>
 </body>
 </html><?php
@@ -476,7 +498,21 @@ body.admin-bar #agent-to-full-page{height:calc(100vh - 32px);height:calc(100dvh 
 }
 
 register_activation_hook(__FILE__, function () {
-    add_rewrite_rule('^ai-agent/?$', 'index.php?agent_to_page=1', 'top');
+    add_rewrite_rule('^ai-agent/?
+register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
+
+new Agent_To_WordPress_Plugin();
+, 'index.php?agent_to_page=1', 'top');
+    add_rewrite_rule('^customer-login/?
+register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
+
+new Agent_To_WordPress_Plugin();
+, 'index.php?agent_to_panel=customer-login', 'top');
+    add_rewrite_rule('^customer-dashboard/?
+register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
+
+new Agent_To_WordPress_Plugin();
+, 'index.php?agent_to_panel=customer-dashboard', 'top');
     flush_rewrite_rules();
 });
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
