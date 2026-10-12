@@ -1,4 +1,4 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import { sequelize } from "../config/database";
 
 export type CartEndpoint = {
@@ -11,12 +11,12 @@ export type CartEndpoint = {
 };
 
 class CartIntegration extends Model<InferAttributes<CartIntegration>, InferCreationAttributes<CartIntegration>> {
-  declare id: string;
+  declare id: CreationOptional<string>;
   declare tenantId: string;
   declare siteId: string;
   declare endpoints: CartEndpoint[];
-  declare createdAt?: Date;
-  declare updatedAt?: Date;
+  declare createdAt?: CreationOptional<Date>;
+  declare updatedAt?: CreationOptional<Date>;
 }
 
 CartIntegration.init({
