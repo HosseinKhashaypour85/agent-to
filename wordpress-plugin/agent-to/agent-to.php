@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.2.0
+ * Version: 2.3.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.2.0';
+    const VERSION = '2.3.0';
     const DEFAULT_API = 'https://agent-to.darkube.ir/api/v1';
 
     public function __construct() {
@@ -28,8 +28,10 @@ final class Agent_To_WordPress_Plugin {
         add_action('admin_post_agent_to_test_connection', array($this, 'handle_test_connection'));
         add_action('rest_api_init', array($this, 'register_rest_routes'));
         add_action('wp_enqueue_scripts', array($this, 'register_assets'));
+        add_action('init', array($this, 'register_agent_page_rewrite'));
+        add_filter('query_vars', array($this, 'register_agent_page_query_var'));
+        add_action('template_redirect', array($this, 'render_agent_page'));
         add_action('wp_footer', array($this, 'render_floating_widget'));
-        add_shortcode('agent_to_chat', array($this, 'shortcode'));
     }
 
     private function defaults() {
@@ -139,9 +141,11 @@ final class Agent_To_WordPress_Plugin {
             </form>
             <p><strong>وضعیت:</strong> <?php echo $s['site_id'] ? 'Site ID تنظیم شده: <code>' . esc_html($s['site_id']) . '</code>' : 'هنوز سایتی متصل نشده است.'; ?></p>
           </div>
-          <div style="max-width:900px;margin-top:18px">
-            <h2>قرار دادن چت داخل برگه</h2>
-            <p>برای نمایش چت در یک برگه به‌جای ویجت شناور از شورت‌کد <code>[agent_to_chat]</code> استفاده کن.</p>
+          <div style="max-width:900px;margin-top:18px;background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:20px">
+            <h2 style="margin-top:0">صفحه اختصاصی دستیار</h2>
+            <p>صفحه دستیار بدون شورت‌کد در آدرس زیر در دسترس است:</p>
+            <p><a href="<?php echo esc_url(home_url('/ai-agent?siteId=' . rawurlencode($s['site_id']))); ?>" target="_blank" rel="noopener noreferrer"><code><?php echo esc_html(home_url('/ai-agent?siteId=' . rawurlencode($s['site_id']))); ?></code></a></p>
+            <p class="description">ویجت شناور از گزینه مستقل بالا کنترل می‌شود. صفحه اختصاصی در مسیر <code>/ai-agent</code> نمایش داده می‌شود.</p>
           </div>
         </div>
         <?php
@@ -395,19 +399,157 @@ final class Agent_To_WordPress_Plugin {
         )) . ';', 'before');
     }
 
+    public function register_agent_page_rewrite() {
+        add_rewrite_rule('^ai-agent/?
+        static $count = 0;
+        $count++;
+        return '<div class="agent-to-root agent-to-' . esc_attr($mode) . '" id="agent-to-widget-' . (int) $count . '" data-agent-to-mode="' . esc_attr($mode) . '"></div>';
+    }
+
+
+}
+
+register_activation_hook(__FILE__, function () {
+    add_rewrite_rule('^ai-agent/?
+, 'index.php?agent_to_page=1', 'top');
+    }
+
+    public function register_agent_page_query_var($vars) {
+        $vars[] = 'agent_to_page';
+        return $vars;
+    }
+
+    private function is_agent_page() {
+        return (string) get_query_var('agent_to_page') === '1';
+    }
+
+    public function render_agent_page() {
+        if (!$this->is_agent_page()) {
+            return;
+        }
+
+        $s = $this->settings();
+        if (empty($s['site_id'])) {
+            status_header(503);
+            nocache_headers();
+            wp_die('ابتدا افزونه Agent-To را از مسیر تنظیمات متصل کنید.', 'Agent-To', array('response' => 503));
+        }
+
+        $site_id = sanitize_text_field(wp_unslash((string) get_query_var('siteId')));
+        if ($site_id === '') {
+            $site_id = $s['site_id'];
+        }
+        $app_url = add_query_arg('siteId', $site_id, 'https://agent-to-front.darkube.ir/ai-agent');
+        status_header(200);
+        nocache_headers();
+        ?><!doctype html>
+<html <?php language_attributes(); ?>>
+<head>
+<meta charset="<?php bloginfo('charset'); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?php echo esc_html($s['widget_title']); ?></title>
+<style>
+html,body{margin:0!important;padding:0!important;width:100%;height:100%;min-height:100%;overflow:hidden;background:#fff}
+#agent-to-full-page{display:block;width:100%;height:100vh;height:100dvh;border:0;margin:0;padding:0}
+body.admin-bar #agent-to-full-page{height:calc(100vh - 32px);height:calc(100dvh - 32px)}
+@media(max-width:782px){body.admin-bar #agent-to-full-page{height:calc(100vh - 46px);height:calc(100dvh - 46px)}}
+</style>
+<?php wp_head(); ?>
+</head>
+<body <?php body_class('agent-to-full-page-body'); ?>>
+<?php wp_body_open(); ?>
+<iframe id="agent-to-full-page" src="<?php echo esc_url($app_url); ?>" title="<?php echo esc_attr($s['widget_title']); ?>" allow="clipboard-write" loading="eager"></iframe>
+<?php wp_footer(); ?>
+</body>
+</html><?php
+        exit;
+    }
+
     public function render_floating_widget() {
         $s = $this->settings();
-        if ($s['enabled'] !== '1' || empty($s['site_id'])) {
+        if ($this->is_agent_page() || $s['enabled'] !== '1' || empty($s['site_id'])) {
             return;
         }
         echo $this->widget_markup('floating');
     }
 
-    public function shortcode() {
-        if (empty($this->settings()['site_id'])) {
-            return current_user_can('manage_options') ? '<p>Agent-To: ابتدا افزونه را از تنظیمات متصل کن.</p>' : '';
+    private function widget_markup($mode) {
+        static $count = 0;
+        $count++;
+        return '<div class="agent-to-root agent-to-' . esc_attr($mode) . '" id="agent-to-widget-' . (int) $count . '" data-agent-to-mode="' . esc_attr($mode) . '"></div>';
+    }
+
+
+}
+
+new Agent_To_WordPress_Plugin();
+, 'index.php?agent_to_page=1', 'top');
+    flush_rewrite_rules();
+});
+
+register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
+
+new Agent_To_WordPress_Plugin();
+, 'index.php?agent_to_page=1', 'top');
+    }
+
+    public function register_agent_page_query_var($vars) {
+        $vars[] = 'agent_to_page';
+        return $vars;
+    }
+
+    private function is_agent_page() {
+        return (string) get_query_var('agent_to_page') === '1';
+    }
+
+    public function render_agent_page() {
+        if (!$this->is_agent_page()) {
+            return;
         }
-        return $this->widget_markup('embedded');
+
+        $s = $this->settings();
+        if (empty($s['site_id'])) {
+            status_header(503);
+            nocache_headers();
+            wp_die('ابتدا افزونه Agent-To را از مسیر تنظیمات متصل کنید.', 'Agent-To', array('response' => 503));
+        }
+
+        $site_id = sanitize_text_field(wp_unslash((string) get_query_var('siteId')));
+        if ($site_id === '') {
+            $site_id = $s['site_id'];
+        }
+        $app_url = add_query_arg('siteId', $site_id, 'https://agent-to-front.darkube.ir/ai-agent');
+        status_header(200);
+        nocache_headers();
+        ?><!doctype html>
+<html <?php language_attributes(); ?>>
+<head>
+<meta charset="<?php bloginfo('charset'); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?php echo esc_html($s['widget_title']); ?></title>
+<style>
+html,body{margin:0!important;padding:0!important;width:100%;height:100%;min-height:100%;overflow:hidden;background:#fff}
+#agent-to-full-page{display:block;width:100%;height:100vh;height:100dvh;border:0;margin:0;padding:0}
+body.admin-bar #agent-to-full-page{height:calc(100vh - 32px);height:calc(100dvh - 32px)}
+@media(max-width:782px){body.admin-bar #agent-to-full-page{height:calc(100vh - 46px);height:calc(100dvh - 46px)}}
+</style>
+<?php wp_head(); ?>
+</head>
+<body <?php body_class('agent-to-full-page-body'); ?>>
+<?php wp_body_open(); ?>
+<iframe id="agent-to-full-page" src="<?php echo esc_url($app_url); ?>" title="<?php echo esc_attr($s['widget_title']); ?>" allow="clipboard-write" loading="eager"></iframe>
+<?php wp_footer(); ?>
+</body>
+</html><?php
+        exit;
+    }
+
+    public function render_floating_widget() {
+        $s = $this->settings();
+        if ($this->is_agent_page() || $s['enabled'] !== '1' || empty($s['site_id'])) {
+            return;
+        }
+        echo $this->widget_markup('floating');
     }
 
     private function widget_markup($mode) {
