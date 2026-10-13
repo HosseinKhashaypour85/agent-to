@@ -77,7 +77,8 @@ function AuthForm({ mode }: { mode: "login" | "register" }) {
       const payload = result.data;
       const token = payload?.token || payload?.accessToken || payload?.access_token;
       if (token && typeof window !== "undefined") {
-        localStorage.setItem("agent_to_token", token);
+        sessionStorage.setItem("agentto_token", token);
+        if (payload?.user) sessionStorage.setItem("agentto_user", JSON.stringify(payload.user));
         setSuccess("ورود موفق بود؛ در حال انتقال...");
         router.push("/customer-dashboard");
       } else {
