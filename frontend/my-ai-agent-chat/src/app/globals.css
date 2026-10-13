@@ -231,3 +231,19 @@ textarea {
     display: none !important;
   }
 }
+
+/* Public marketing pages need normal document scrolling on small screens.
+   The embedded chat keeps its existing full-screen mobile behavior. */
+@media (max-width: 640px) {
+  html:has(.marketing-page),
+  body:has(.marketing-page) {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body:has(.marketing-page) {
+    background: #ffffff;
+  }
+}
