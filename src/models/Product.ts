@@ -149,7 +149,7 @@ Product.init(
     currency: {
       type: DataTypes.STRING(10),
       allowNull: false,
-      defaultValue: "IRR",
+      defaultValue: "IRT",
     },
 
     stock: {
