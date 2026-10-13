@@ -100,7 +100,7 @@ function AuthForm({ mode }: { mode: "login" | "register" }) {
       {success && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm leading-6 text-emerald-700">{success}</p>}
       <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#10706B] px-4 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy&&<LoaderCircle className="animate-spin" size={17}/>} {isRegister?"ایجاد حساب کاربری":"ورود به حساب"} <ArrowLeft size={16}/></button>
     </form>
-    <p className="mt-6 text-center text-sm text-slate-500">{isRegister?"قبلاً حساب ساخته‌ای؟":"حساب کاربری نداری؟"} <Link className="font-bold text-[#10706B]" href={isRegister?"/fa/login":"/fa/register"}>{isRegister?"وارد شو":"ثبت‌نام کن"}</Link></p>
+    <p className="mt-6 text-center text-sm text-slate-500">{isRegister?"قبلاً حساب ساخته‌ای؟":"حساب کاربری نداری؟"} <Link className="font-bold text-[#10706B]" href={isRegister?"/customer-login":"/register"}>{isRegister?"وارد شو":"ثبت‌نام کن"}</Link></p>
     <p className="mt-5 text-center text-xs leading-6 text-slate-400">با ادامه، استفاده از سرویس تابع قوانین و سیاست حریم خصوصی است.</p>
   </section>;
 }
