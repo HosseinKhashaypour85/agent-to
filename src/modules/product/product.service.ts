@@ -32,7 +32,7 @@ export async function createProduct(data: CreateProductData) {
     description: data.description ?? null,
     price: data.price ?? null,
     compareAtPrice: data.compareAtPrice ?? null,
-    currency: data.currency ?? "IRR",
+    currency: data.currency ?? "IRT",
     stock: data.stock ?? null,
     stockStatus: data.stockStatus ?? "UNKNOWN",
     category: data.category ?? null,
