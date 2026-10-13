@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     template: "%s | Agent-To",
   },
   description: "با Agent-To پاسخ‌گویی به مشتریان، معرفی محصولات و مدیریت سرنخ‌های فروش را هوشمندتر کن.",
-  alternates: { canonical: "/fa" },
+  alternates: { canonical: "/" },
   openGraph: {
     title: "Agent-To | دستیار هوشمند کسب‌وکار",
     description: "دستیار هوشمند برای ارتباط بهتر با مشتریان و رشد کسب‌وکار.",
