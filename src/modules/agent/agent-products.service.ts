@@ -144,7 +144,7 @@ export async function createProduct(
       typeof data.currency === "string" &&
       data.currency.trim()
         ? data.currency.trim()
-        : "IRR",
+        : "IRT",
 
     stock:
       typeof data.stock === "number"
