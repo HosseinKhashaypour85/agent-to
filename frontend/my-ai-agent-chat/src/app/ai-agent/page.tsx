@@ -35,7 +35,7 @@ function getSiteId(): string {
   const siteId =
     params.get("siteId")?.trim() ||
     params.get("site")?.trim() ||
-    "";
+    "AGENT-TO-AI";
 
   return siteId;
 }
