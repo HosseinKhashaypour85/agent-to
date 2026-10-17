@@ -44,7 +44,8 @@ export async function syncWordPressProducts(req: Request, res: Response) {
     let created = 0;
     let updated = 0;
     for (const raw of products) {
-      const externalId = String(raw?.id ?? "").trim();
+      const wordpressProductId = String(raw?.id ?? "").trim();
+      const externalId = wordpressProductId ? `wp:${siteId}:${wordpressProductId}` : "";
       const name = String(raw?.name ?? "").trim().slice(0, 255);
       if (!externalId || !name) continue;
 
@@ -64,7 +65,7 @@ export async function syncWordPressProducts(req: Request, res: Response) {
         sourceType: source,
         isActive: true,
         lastSyncedAt: new Date(),
-        rawData: { wordpressSiteId: siteId, wordpressProductId: externalId, source: raw?.source ?? "wordpress" },
+        rawData: { wordpressSiteId: siteId, wordpressProductId, source: raw?.source ?? "wordpress" },
       };
 
       const existing = await Product.findOne({
