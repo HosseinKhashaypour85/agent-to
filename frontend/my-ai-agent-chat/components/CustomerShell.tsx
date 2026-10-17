@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { api, clearCustomerSession } from "@/lib/api";
-import { LayoutDashboard, Bot, Radio, Package, Database, Sparkles, Code2, MessagesSquare, Users, UserRoundSearch, CreditCard, LifeBuoy, Settings, Palette, Bell, Menu, X, Search, ChevronLeft, Zap, LogOut, LoaderCircle, Send, FileText } from "lucide-react";
+import { LayoutDashboard, Bot, Radio, Package, Database, Sparkles, Code2, MessagesSquare, Users, UserRoundSearch, CreditCard, LifeBuoy, Settings, Palette, Bell, Menu, X, Search, ChevronLeft, Zap, LogOut, LoaderCircle, Send, FileText, SearchCheck } from "lucide-react";
 
 const nav = [
   { title: "نمای کلی", items: [
@@ -15,6 +15,7 @@ const nav = [
     { label: "ربات تلگرام", href: "/customer-telegram", icon: Send },
   ]},
   { title: "هوش محصول", items: [
+    { label: "شناسایی خودکار محصولات", href: "/product-detection", icon: SearchCheck },
     { label: "منابع محصولات", href: "/product-sources", icon: Database },
     { label: "API سبد خرید سایت کدنویسی", href: "/customer-cart-integration", icon: Code2 },
     { label: "کاتالوگ محصولات", href: "/product-catalog", icon: Package },
