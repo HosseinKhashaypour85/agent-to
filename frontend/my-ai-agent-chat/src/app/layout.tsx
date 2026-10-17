@@ -3,7 +3,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AGENT-TO Admin",
+  title: { default: "Agent-To", template: "%s | Agent-To" },
   description: "AGENT-TO Administration Panel",
 };
 

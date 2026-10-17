@@ -3,7 +3,7 @@ export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type TicketMessage = { id: string; ticketId: string; senderUserId: string; senderType: "CUSTOMER" | "SUPPORT"; message: string; createdAt: string };
 export type Ticket = { id: string; tenantId: string; createdByUserId: string; subject: string; category: string; priority: TicketPriority; status: TicketStatus; lastMessageAt: string; createdAt: string; messages?: TicketMessage[] };
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "https://agent-to.darkube.ir/api/v1").replace(/\/$/, "");
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "https://agentto.jorluma.ir/api/v1").replace(/\/$/, "");
 
 function getToken() {
   if (typeof window === "undefined") return "";

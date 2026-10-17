@@ -2,12 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    cpus: 2,
+    cpus: 1,
   },
 
   env: {
-    NEXT_PUBLIC_API_URL: "https://agent-to.darkube.ir/api/v1",
-    API_URL : "https://agent-to.darkube.ir/api/v1"
+    NEXT_PUBLIC_API_URL: "https://agentto.jorluma.ir/api/v1",
+    API_URL: "https://agentto.jorluma.ir/api/v1",
   },
 };
 

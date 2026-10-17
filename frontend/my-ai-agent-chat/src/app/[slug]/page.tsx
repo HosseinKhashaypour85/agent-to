@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "https://agent-to.darkube.ir/api/v1"
+  process.env.NEXT_PUBLIC_API_URL || "https://agentto.jorluma.ir/api/v1"
 ).replace(/\/$/, "");
 
 const pageCopy: Record<
