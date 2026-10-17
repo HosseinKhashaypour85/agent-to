@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.7.0
+ * Version: 2.7.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.7.0';
+    const VERSION = '2.7.1';
     const DEFAULT_API = 'https://agentto.jorluma.ir/api/v1';
     const FRONTEND_URL = 'https://agentto.jorluma.ir';
 
@@ -29,6 +29,7 @@ final class Agent_To_WordPress_Plugin {
         add_action('admin_post_agent_to_test_connection', array($this, 'handle_test_connection'));
         add_action('rest_api_init', array($this, 'register_rest_routes'));
         add_action('wp_enqueue_scripts', array($this, 'register_assets'));
+        add_action('wp_enqueue_scripts', array($this, 'dequeue_elementor_on_agent_pages'), 1000);
         add_action('init', array($this, 'register_agent_page_rewrite'));
         add_filter('query_vars', array($this, 'register_agent_page_query_var'));
         add_action('template_redirect', array($this, 'render_agent_page'));
@@ -442,6 +443,21 @@ final class Agent_To_WordPress_Plugin {
             'logoUrl' => isset($s['logo_url']) ? esc_url_raw($s['logo_url']) : '',
             'siteName' => get_bloginfo('name'),
         )) . ';', 'before');
+    }
+
+    public function dequeue_elementor_on_agent_pages() {
+        // These routes render a standalone iframe shell, not an Elementor page.
+        // Avoid Elementor's frontend bundle expecting elementorFrontendConfig here.
+        if (!$this->is_agent_page() && !$this->is_customer_panel_page()) {
+            return;
+        }
+
+        foreach (array('elementor-frontend', 'elementor-pro-frontend') as $handle) {
+            wp_dequeue_script($handle);
+            wp_deregister_script($handle);
+        }
+        wp_dequeue_style('elementor-frontend');
+        wp_dequeue_style('elementor-pro');
     }
 
     public function register_agent_page_rewrite() {
