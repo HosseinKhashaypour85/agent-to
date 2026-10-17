@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -34,3 +34,15 @@ jobs:
           path: agent-to-wordpress-plugin.zip
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish public plugin release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.7.0
+          name: Agent-To WordPress Plugin v2.7.0
+          body: |
+            Agent-To WordPress plugin with updated API and frontend URLs.
+            Install this ZIP through WordPress Plugins > Add New > Upload Plugin.
+          files: agent-to-wordpress-plugin.zip
+          make_latest: true
