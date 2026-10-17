@@ -291,7 +291,7 @@ final class Agent_To_WordPress_Plugin {
     public function sync_products_to_backend() {
         $s = $this->settings();
         if ($s['auto_detect_products'] !== '1' || empty($s['site_id'])) {
-            return;
+            return false;
         }
 
         $page = 1;
@@ -304,7 +304,7 @@ final class Agent_To_WordPress_Plugin {
             $result = $this->get_detected_products($request);
             if (is_wp_error($result)) {
                 error_log('Agent-To product detection failed: ' . $result->get_error_message());
-                return;
+                return false;
             }
             $data = $result instanceof WP_REST_Response ? $result->get_data() : $result;
             if (!is_array($data) || empty($data['success'])) {
@@ -336,6 +336,8 @@ final class Agent_To_WordPress_Plugin {
             $total = isset($data['total']) ? (int) $data['total'] : count($products);
             $page++;
         } while (count($products) === $per_page && (($page - 1) * $per_page) < $total);
+
+        return true;
     }
 
     public function trigger_product_sync(WP_REST_Request $request) {
@@ -355,7 +357,10 @@ final class Agent_To_WordPress_Plugin {
         }
         set_transient($rate_key, 1, MINUTE_IN_SECONDS);
 
-        $this->sync_products_to_backend();
+        $synced = $this->sync_products_to_backend();
+        if (!$synced) {
+            return new WP_Error('agent_to_product_sync_failed', 'همگام‌سازی با سرور Agent-To ناموفق بود؛ گزارش خطاهای وردپرس را بررسی کن.', array('status' => 502));
+        }
 
         return rest_ensure_response(array(
             'success' => true,
