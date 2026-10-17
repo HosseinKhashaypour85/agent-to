@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.6.0
+ * Version: 2.7.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,8 +18,9 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.6.0';
-    const DEFAULT_API = 'https://agent-to.darkube.ir/api/v1';
+    const VERSION = '2.7.0';
+    const DEFAULT_API = 'https://agentto.jorluma.ir/api/v1';
+    const FRONTEND_URL = 'https://agentto.jorluma.ir';
 
     public function __construct() {
         add_action('admin_menu', array($this, 'admin_menu'));
@@ -50,7 +51,18 @@ final class Agent_To_WordPress_Plugin {
 
     private function settings() {
         $saved = get_option(self::OPTION, array());
-        return wp_parse_args(is_array($saved) ? $saved : array(), $this->defaults());
+        $saved = is_array($saved) ? $saved : array();
+
+        // Migrate legacy Agent-To API hosts while preserving unrelated custom URLs.
+        $saved_api = isset($saved['api_url']) ? (string) $saved['api_url'] : '';
+        $saved_host = $saved_api !== '' ? (string) wp_parse_url($saved_api, PHP_URL_HOST) : '';
+        $saved_path = $saved_api !== '' ? untrailingslashit((string) wp_parse_url($saved_api, PHP_URL_PATH)) : '';
+        if (strpos($saved_host, 'agent-to.') === 0 && substr($saved_host, -3) === '.ir' && $saved_path === '/api/v1') {
+            $saved['api_url'] = self::DEFAULT_API;
+            update_option(self::OPTION, $saved, false);
+        }
+
+        return wp_parse_args($saved, $this->defaults());
     }
 
     private function api_url() {
@@ -77,7 +89,7 @@ final class Agent_To_WordPress_Plugin {
         $color = isset($input['primary_color']) ? sanitize_hex_color($input['primary_color']) : $old['primary_color'];
         return array(
             'site_id' => isset($input['site_id']) ? sanitize_text_field($input['site_id']) : $old['site_id'],
-            'api_url' => $old['api_url'],
+            'api_url' => untrailingslashit($api),
             'widget_title' => isset($input['widget_title']) ? sanitize_text_field($input['widget_title']) : $old['widget_title'],
             'welcome_message' => isset($input['welcome_message']) ? sanitize_textarea_field($input['welcome_message']) : $old['welcome_message'],
             'primary_color' => $color ? $color : '#10706B',
@@ -128,6 +140,7 @@ final class Agent_To_WordPress_Plugin {
             <form method="post" action="options.php">
               <?php settings_fields('agent_to_wp_group'); ?>
               <table class="form-table" role="presentation">
+                <tr><th scope="row"><label for="agent-to-api-url">API Base URL</label></th><td><input id="agent-to-api-url" name="<?php echo esc_attr(self::OPTION); ?>[api_url]" type="url" class="large-text code" dir="ltr" value="<?php echo esc_attr($s['api_url']); ?>" required><p class="description">آدرس فعلی: https://agentto.jorluma.ir/api/v1</p></td></tr>
                 <tr><th scope="row"><label for="agent-to-site-id">Site ID</label></th><td><input id="agent-to-site-id" name="<?php echo esc_attr(self::OPTION); ?>[site_id]" type="text" class="regular-text" value="<?php echo esc_attr($s['site_id']); ?>" required><p class="description">پس از نصب با توکن، این مقدار خودکار پر می‌شود. در صورت نیاز می‌توانی دستی هم واردش کنی.</p></td></tr>
                 <tr><th scope="row"><label for="agent-to-title">عنوان ویجت</label></th><td><input id="agent-to-title" name="<?php echo esc_attr(self::OPTION); ?>[widget_title]" type="text" class="regular-text" value="<?php echo esc_attr($s['widget_title']); ?>"></td></tr>
                 <tr><th scope="row"><label for="agent-to-welcome">پیام خوشامد</label></th><td><textarea id="agent-to-welcome" name="<?php echo esc_attr(self::OPTION); ?>[welcome_message]" rows="3" class="large-text"><?php echo esc_textarea($s['welcome_message']); ?></textarea></td></tr>
@@ -477,12 +490,12 @@ final class Agent_To_WordPress_Plugin {
         }
 
         if ($is_agent_page) {
-            $app_url = add_query_arg('siteId', $site_id, 'https://agent-to-front.darkube.ir/ai-agent');
+            $app_url = add_query_arg('siteId', $site_id, self::FRONTEND_URL . '/ai-agent');
             if (!empty($s['logo_url'])) {
                 $app_url = add_query_arg('brandLogo', esc_url_raw($s['logo_url']), $app_url);
             }
         } else {
-            $app_url = 'https://agent-to-front.darkube.ir/' . $panel_route;
+            $app_url = untrailingslashit(self::FRONTEND_URL) . '/' . $panel_route;
             if ($site_id !== '') {
                 $app_url = add_query_arg('siteId', $site_id, $app_url);
             }
