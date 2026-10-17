@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.7.1
+ * Version: 2.8.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.7.1';
+    const VERSION = '2.8.0';
     const DEFAULT_API = 'https://agentto.jorluma.ir/api/v1';
     const FRONTEND_URL = 'https://agentto.jorluma.ir';
 
@@ -31,6 +31,11 @@ final class Agent_To_WordPress_Plugin {
         add_action('wp_enqueue_scripts', array($this, 'register_assets'));
         add_action('wp_enqueue_scripts', array($this, 'dequeue_elementor_on_agent_pages'), 1000);
         add_action('init', array($this, 'register_agent_page_rewrite'));
+        add_filter('cron_schedules', array($this, 'add_product_sync_schedule'));
+        add_action('init', array($this, 'schedule_product_sync'));
+        add_action('agent_to_sync_products', array($this, 'sync_products_to_backend'));
+        add_action('save_post_product', array($this, 'schedule_product_sync_after_save'), 20, 3);
+        add_action('save_post_download', array($this, 'schedule_product_sync_after_save'), 20, 3);
         add_filter('query_vars', array($this, 'register_agent_page_query_var'));
         add_action('template_redirect', array($this, 'render_agent_page'));
         add_action('wp_footer', array($this, 'render_floating_widget'));
@@ -251,6 +256,84 @@ final class Agent_To_WordPress_Plugin {
             $this->admin_redirect('tested');
         }
         $this->admin_redirect('test_failed');
+    }
+
+    public function add_product_sync_schedule($schedules) {
+        $schedules['agent_to_15_minutes'] = array(
+            'interval' => 15 * MINUTE_IN_SECONDS,
+            'display' => 'Agent-To product sync every 15 minutes',
+        );
+        return $schedules;
+    }
+
+    public function schedule_product_sync() {
+        $s = $this->settings();
+        if ($s['auto_detect_products'] === '1' && !empty($s['site_id'])) {
+            if (!wp_next_scheduled('agent_to_sync_products')) {
+                wp_schedule_event(time() + 60, 'agent_to_15_minutes', 'agent_to_sync_products');
+            }
+        } else {
+            wp_clear_scheduled_hook('agent_to_sync_products');
+        }
+    }
+
+    public function schedule_product_sync_after_save($post_id, $post, $update) {
+        if (wp_is_post_revision($post_id) || (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || !($post instanceof WP_Post) || $post->post_status !== 'publish') {
+            return;
+        }
+        $s = $this->settings();
+        if ($s['auto_detect_products'] === '1' && !empty($s['site_id']) && !wp_next_scheduled('agent_to_sync_products')) {
+            wp_schedule_single_event(time() + 30, 'agent_to_sync_products');
+        }
+    }
+
+    public function sync_products_to_backend() {
+        $s = $this->settings();
+        if ($s['auto_detect_products'] !== '1' || empty($s['site_id'])) {
+            return;
+        }
+
+        $page = 1;
+        $per_page = 100;
+        do {
+            $request = new WP_REST_Request('GET', '/' . self::REST_NAMESPACE . '/products');
+            $request->set_param('page', $page);
+            $request->set_param('per_page', $per_page);
+            $result = $this->get_detected_products($request);
+            if (is_wp_error($result)) {
+                error_log('Agent-To product detection failed: ' . $result->get_error_message());
+                return;
+            }
+            $data = $result instanceof WP_REST_Response ? $result->get_data() : $result;
+            if (!is_array($data) || empty($data['success'])) {
+                error_log('Agent-To product detection returned an invalid response.');
+                return;
+            }
+
+            $products = isset($data['products']) && is_array($data['products']) ? $data['products'] : array();
+            if ($products) {
+                $response = wp_remote_post($this->api_url() . '/public/sites/' . rawurlencode($s['site_id']) . '/products/sync', array(
+                    'timeout' => 30,
+                    'headers' => array('Content-Type' => 'application/json', 'Accept' => 'application/json'),
+                    'body' => wp_json_encode(array(
+                        'domain' => wp_parse_url(home_url('/'), PHP_URL_HOST),
+                        'products' => $products,
+                    )),
+                ));
+                if (is_wp_error($response)) {
+                    error_log('Agent-To product sync error: ' . $response->get_error_message());
+                    return;
+                }
+                $status = (int) wp_remote_retrieve_response_code($response);
+                if ($status < 200 || $status >= 300) {
+                    error_log('Agent-To product sync failed with HTTP ' . $status . ': ' . wp_strip_all_tags(wp_remote_retrieve_body($response)));
+                    return;
+                }
+            }
+
+            $total = isset($data['total']) ? (int) $data['total'] : count($products);
+            $page++;
+        } while (count($products) === $per_page && (($page - 1) * $per_page) < $total);
     }
 
     public function register_rest_routes() {
