@@ -4,7 +4,7 @@ Tags: chatbot, ai, customer support, live chat
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.4.0
+Stable tag: 2.7.0
 License: GPLv2 or later
 
 Connect WordPress to Agent-To with a dedicated /ai-agent page, an optional floating chat widget, product detection, and a server-side REST proxy.
@@ -20,7 +20,7 @@ Connect WordPress to Agent-To with a dedicated /ai-agent page, an optional float
 
 == Manual setup ==
 If the site was already installed, enter its Site ID manually and set the API Base URL. Default:
-https://agent-to.darkube.ir/api/v1
+https://agentto.jorluma.ir/api/v1
 
 == Dedicated agent page ==
 After connecting the site, the plugin registers /ai-agent automatically. Visit:
@@ -52,6 +52,12 @@ After activating the plugin, these routes are available on the customer's domain
 They display the existing central Agent-To pages inside a full-screen iframe; they do not deploy a separate Next.js runtime to the customer's PHP hosting. WordPress refreshes rewrite rules when the plugin version changes.
 
 == Changelog ==
+= 2.7.0 =
+* Updated API and embedded frontend URLs to https://agentto.jorluma.ir.
+* Migrates legacy Agent-To API host settings to the current endpoint.
+* Added an editable API Base URL field and fixed saving the validated URL.
+* Bumped the plugin version to refresh widget assets and rewrite rules.
+
 = 2.4.0 =
 * Added /customer-login and /customer-dashboard routes on the customer's domain.
 * Hid the floating widget on customer panel routes.
