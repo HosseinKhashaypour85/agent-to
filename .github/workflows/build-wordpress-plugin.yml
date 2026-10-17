@@ -30,7 +30,7 @@ jobs:
       - name: Upload plugin package
         uses: actions/upload-artifact@v4
         with:
-          name: agent-to-wordpress-plugin-2.8.3
+          name: agent-to-wordpress-plugin-2.8.4
           path: agent-to-wordpress-plugin.zip
           if-no-files-found: error
           retention-days: 30
@@ -39,8 +39,8 @@ jobs:
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.8.3
-          name: Agent-To WordPress Plugin v2.8.3
+          tag_name: v2.8.4
+          name: Agent-To WordPress Plugin v2.8.4
           body: |
             Agent-To WordPress plugin with automatic and on-demand WooCommerce/product detection and catalog sync to Agent-To.
             Install this ZIP through WordPress Plugins > Add New > Upload Plugin.
