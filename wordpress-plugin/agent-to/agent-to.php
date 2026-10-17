@@ -34,6 +34,7 @@ final class Agent_To_WordPress_Plugin {
         add_filter('cron_schedules', array($this, 'add_product_sync_schedule'));
         add_action('init', array($this, 'schedule_product_sync'));
         add_action('agent_to_sync_products', array($this, 'sync_products_to_backend'));
+        add_action('agent_to_sync_products_once', array($this, 'sync_products_to_backend'));
         add_action('save_post_product', array($this, 'schedule_product_sync_after_save'), 20, 3);
         add_action('save_post_download', array($this, 'schedule_product_sync_after_save'), 20, 3);
         add_filter('query_vars', array($this, 'register_agent_page_query_var'));
@@ -282,8 +283,8 @@ final class Agent_To_WordPress_Plugin {
             return;
         }
         $s = $this->settings();
-        if ($s['auto_detect_products'] === '1' && !empty($s['site_id']) && !wp_next_scheduled('agent_to_sync_products')) {
-            wp_schedule_single_event(time() + 30, 'agent_to_sync_products');
+        if ($s['auto_detect_products'] === '1' && !empty($s['site_id']) && !wp_next_scheduled('agent_to_sync_products_once')) {
+            wp_schedule_single_event(time() + 30, 'agent_to_sync_products_once');
         }
     }
 
@@ -411,6 +412,9 @@ final class Agent_To_WordPress_Plugin {
             }
         } else {
             $types = array();
+            if (function_exists('edd_get_download')) {
+                $types[] = 'download';
+            }
             foreach (get_post_types(array('public' => true), 'objects') as $type) {
                 $name = strtolower($type->name);
                 $label = strtolower($type->labels->name ?? '');
@@ -427,7 +431,7 @@ final class Agent_To_WordPress_Plugin {
                 ));
                 $total = (int) $query->found_posts;
                 foreach ($query->posts as $post) {
-                    $price = get_post_meta($post->ID, '_price', true);
+                    $price = function_exists('edd_get_download_price') && $post->post_type === 'download' ? edd_get_download_price($post->ID) : get_post_meta($post->ID, '_price', true);
                     if ($price === '') $price = get_post_meta($post->ID, 'price', true);
                     $sku = get_post_meta($post->ID, '_sku', true);
                     if ($sku === '') $sku = get_post_meta($post->ID, 'sku', true);
@@ -442,7 +446,7 @@ final class Agent_To_WordPress_Plugin {
                         'stock_status' => sanitize_text_field((string) $stock),
                         'url' => esc_url_raw(get_permalink($post)),
                         'image' => esc_url_raw(get_the_post_thumbnail_url($post, 'full') ?: ''),
-                        'source' => sanitize_key($post->post_type),
+                        'source' => $post->post_type === 'download' ? 'easy_digital_downloads' : sanitize_key($post->post_type),
                     );
                 }
                 wp_reset_postdata();
