@@ -295,6 +295,7 @@ final class Agent_To_WordPress_Plugin {
 
         $page = 1;
         $per_page = 100;
+        $total = 0;
         do {
             $request = new WP_REST_Request('GET', '/' . self::REST_NAMESPACE . '/products');
             $request->set_param('page', $page);
