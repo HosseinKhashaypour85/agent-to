@@ -9,12 +9,14 @@ import {
 } from "./agent-products.controller";
 import { importProductsController } from "./agent-products-import.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
+import { syncWordPressProductsNow } from "./agent-products-sync.controller";
 
 const router = Router();
 
 router.use(authMiddleware);
 
 router.get("/", list);
+router.post("/sync-wordpress", syncWordPressProductsNow);
 router.get("/:id", get);
 
 router.post("/import", importProductsController);
