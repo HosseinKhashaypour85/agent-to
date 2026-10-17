@@ -1,0 +1,36 @@
+name: Build Agent-To WordPress Plugin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "wordpress-plugin/agent-to/**"
+      - ".github/workflows/build-wordpress-plugin.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate plugin PHP syntax
+        run: php -l wordpress-plugin/agent-to/agent-to.php
+
+      - name: Build installable ZIP
+        run: |
+          cd wordpress-plugin
+          zip -r ../agent-to-wordpress-plugin.zip agent-to
+
+      - name: Upload plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-to-wordpress-plugin-2.7.0
+          path: agent-to-wordpress-plugin.zip
+          if-no-files-found: error
+          retention-days: 30
