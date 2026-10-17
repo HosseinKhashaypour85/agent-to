@@ -3,7 +3,7 @@
  * Plugin Name: Agent-To AI Chat
  * Plugin URI: https://github.com/HosseinKhashaypour85/agent-to
  * Description: Connect WordPress to Agent-To using a one-time installation token or Site ID, with a secure server-side chat proxy.
- * Version: 2.8.2
+ * Version: 2.8.3
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Agent-To
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 final class Agent_To_WordPress_Plugin {
     const OPTION = 'agent_to_wp_settings';
     const REST_NAMESPACE = 'agent-to/v1';
-    const VERSION = '2.8.2';
+    const VERSION = '2.8.3';
     const DEFAULT_API = 'https://agentto.jorluma.ir/api/v1';
     const FRONTEND_URL = 'https://agentto.jorluma.ir';
 
@@ -336,6 +336,31 @@ final class Agent_To_WordPress_Plugin {
             $total = isset($data['total']) ? (int) $data['total'] : count($products);
             $page++;
         } while (count($products) === $per_page && (($page - 1) * $per_page) < $total);
+    }
+
+    public function trigger_product_sync(WP_REST_Request $request) {
+        $s = $this->settings();
+        $requested_site_id = sanitize_text_field((string) $request->get_param('siteId'));
+
+        if (empty($s['site_id']) || $requested_site_id === '' || !hash_equals((string) $s['site_id'], $requested_site_id)) {
+            return new WP_Error('agent_to_invalid_site', 'شناسه سایت معتبر نیست.', array('status' => 403));
+        }
+        if ($s['auto_detect_products'] !== '1') {
+            return new WP_Error('agent_to_detection_disabled', 'تشخیص خودکار محصولات در تنظیمات افزونه غیرفعال است.', array('status' => 409));
+        }
+
+        $rate_key = 'agent_to_manual_product_sync';
+        if (get_transient($rate_key)) {
+            return new WP_Error('agent_to_sync_rate_limited', 'همگام‌سازی اخیراً اجرا شده؛ یک دقیقه دیگر دوباره تلاش کن.', array('status' => 429));
+        }
+        set_transient($rate_key, 1, MINUTE_IN_SECONDS);
+
+        $this->sync_products_to_backend();
+
+        return rest_ensure_response(array(
+            'success' => true,
+            'message' => 'فرایند شناسایی و همگام‌سازی محصولات اجرا شد. نتیجه را در کاتالوگ Agent-To بررسی کن.',
+        ));
     }
 
     public function register_rest_routes() {
