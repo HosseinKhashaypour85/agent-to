@@ -1,5 +1,6 @@
 import express from "express";
 import publicRoutes from "./modules/public/public.routes";
+import wordpressProductSyncRoutes from "./modules/public/wordpress-product-sync.routes";
 import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./modules/auth/auth.routes";
@@ -98,6 +99,7 @@ app.get("/api/v1/test-crm", (_req, res) => {
 
 
 app.use("/api/v1/public", publicRoutes);
+app.use("/api/v1/public", wordpressProductSyncRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/sites", siteRoutes);
 app.use(
