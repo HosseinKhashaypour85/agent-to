@@ -4,7 +4,7 @@ Tags: chatbot, ai, customer support, live chat
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.8.0
+Stable tag: 2.8.1
 License: GPLv2 or later
 
 Connect WordPress to Agent-To with a dedicated /ai-agent page, an optional floating chat widget, product detection, and a server-side REST proxy.
@@ -52,7 +52,7 @@ After activating the plugin, these routes are available on the customer's domain
 They display the existing central Agent-To pages inside a full-screen iframe; they do not deploy a separate Next.js runtime to the customer's PHP hosting. WordPress refreshes rewrite rules when the plugin version changes.
 
 == Changelog ==
-= 2.8.0 =
+= 2.8.1 =
 * Automatically detects published WooCommerce products and supported product post types.
 * Syncs product names, descriptions, SKU, price, currency, stock status, image and product URL to Agent-To every 15 minutes.
 * Adds a backend sync endpoint scoped to the registered site and domain.
