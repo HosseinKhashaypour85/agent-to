@@ -30,7 +30,7 @@ jobs:
       - name: Upload plugin package
         uses: actions/upload-artifact@v4
         with:
-          name: agent-to-wordpress-plugin-2.7.0
+          name: agent-to-wordpress-plugin-2.7.1
           path: agent-to-wordpress-plugin.zip
           if-no-files-found: error
           retention-days: 30
@@ -39,8 +39,8 @@ jobs:
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.7.0
-          name: Agent-To WordPress Plugin v2.7.0
+          tag_name: v2.7.1
+          name: Agent-To WordPress Plugin v2.7.1
           body: |
             Agent-To WordPress plugin with updated API and frontend URLs.
             Install this ZIP through WordPress Plugins > Add New > Upload Plugin.
